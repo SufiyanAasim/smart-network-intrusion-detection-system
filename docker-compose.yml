@@ -1,0 +1,14 @@
+services:
+  nids:
+    build: .
+    ports:
+      - "8501:8501"
+    volumes:
+      - ./data:/app/data
+      - ./models:/app/models
+    # Live packet capture (Tab 1) needs host network access + raw sockets.
+    # Uncomment for local live-capture testing; not needed for pcap upload only.
+    # network_mode: host
+    # cap_add:
+    #   - NET_RAW
+    #   - NET_ADMIN

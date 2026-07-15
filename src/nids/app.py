@@ -1,15 +1,24 @@
+import os
+import sys
+
+# Make the `nids` package importable when this file is launched directly via
+# `streamlit run src/nids/app.py` (Streamlit runs it as a standalone script,
+# so `src/` needs to be on sys.path for `from nids.features import ...`).
+_SRC_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if _SRC_DIR not in sys.path:
+    sys.path.insert(0, _SRC_DIR)
+
 import streamlit as st
 import pandas as pd
-import numpy as np
 import joblib
-from scapy.all import sniff, rdpcap, IP, TCP, UDP
+from scapy.all import sniff, rdpcap
 from sklearn.preprocessing import LabelEncoder
 from sklearn.metrics import accuracy_score
-import os
 import tempfile
 import altair as alt
-from collections import Counter
 import time
+
+from nids.features import MODEL_FEATURES, preprocess_data, packets_to_df
 
 # --- 1. Page Configuration ---
 st.set_page_config(page_title="Network Intrusion Detection", layout="wide")
@@ -18,57 +27,39 @@ st.title("🛡️ AI Network Intrusion Detection System")
 st.markdown("Compare **Random Forest** and **Decision Tree** models side-by-side.")
 
 # --- 2. Smart Path Finding ---
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+BASE_DIR = os.path.dirname(_SRC_DIR)
+MODELS_DIR = os.path.join(BASE_DIR, "models")
+DATA_DIR = os.path.join(BASE_DIR, "data", "nsl-kdd")
 
-def get_path(filename):
-    return os.path.join(BASE_DIR, filename)
+def get_model_path(filename):
+    return os.path.join(MODELS_DIR, filename)
 
-# --- 3. Helper Functions ---
-MODEL_FEATURES = [
-    'duration', 'protocol_type', 'service', 'flag', 'src_bytes', 'dst_bytes',
-    'land', 'wrong_fragment', 'urgent', 'hot', 'num_failed_logins',
-    'logged_in', 'num_compromised', 'root_shell', 'su_attempted', 'num_root',
-    'num_file_creations', 'num_shells', 'num_access_files', 'num_outbound_cmds',
-    'is_host_login', 'is_guest_login', 'count', 'srv_count', 'serror_rate',
-    'srv_serror_rate', 'rerror_rate', 'srv_rerror_rate', 'same_srv_rate',
-    'diff_srv_rate', 'srv_diff_host_rate', 'dst_host_count', 'dst_host_srv_count',
-    'dst_host_same_srv_rate', 'dst_host_diff_srv_rate', 'dst_host_same_src_port_rate',
-    'dst_host_srv_diff_host_rate', 'dst_host_serror_rate', 'dst_host_srv_serror_rate',
-    'dst_host_rerror_rate', 'dst_host_srv_rerror_rate'
-]
-
-def preprocess_data(df, encoders):
-    df_encoded = df.copy()
-    for col, le in encoders.items():
-        if col in df_encoded.columns:
-            known_classes = set(le.classes_)
-            df_encoded[col] = df_encoded[col].apply(lambda x: x if x in known_classes else list(known_classes)[0])
-            df_encoded[col] = le.transform(df_encoded[col])
-    return df_encoded
+def get_data_path(filename):
+    return os.path.join(DATA_DIR, filename)
 
 # --- 4. Load Resources ---
 @st.cache_resource
 def load_resources():
     try:
-        rf_model = joblib.load(get_path('rf_model.pkl'))
-        dt_model = joblib.load(get_path('dt_model.pkl'))
-        
+        rf_model = joblib.load(get_model_path('rf_model.pkl'))
+        dt_model = joblib.load(get_model_path('dt_model.pkl'))
+
         columns = MODEL_FEATURES + ['label', 'difficulty_level']
-        
-        train_path = get_path('KDDTrain+.txt')
+
+        train_path = get_data_path('KDDTrain+.txt')
         if not os.path.exists(train_path):
             st.error(f"❌ Critical Error: Could not find 'KDDTrain+.txt'")
             st.stop()
         train_df = pd.read_csv(train_path, names=columns)
-        
+
         encoders = {}
         categorical_cols = ['protocol_type', 'service', 'flag']
         for col in categorical_cols:
             le = LabelEncoder()
             le.fit(train_df[col])
             encoders[col] = le
-            
-        test_path = get_path('KDDTest+.txt')
+
+        test_path = get_data_path('KDDTest+.txt')
         rf_acc, dt_acc = 0.0, 0.0
         if os.path.exists(test_path):
             test_df = pd.read_csv(test_path, names=columns)
@@ -91,70 +82,7 @@ st.sidebar.header("📊 Model Accuracy")
 st.sidebar.info(f"**🌲 RF**: {rf_acc*100:.2f}%")
 st.sidebar.warning(f"**🌳 DT**: {dt_acc*100:.2f}%")
 
-# --- 5. Feature Engineering ---
-def packets_to_df(packets):
-    captured_data = []
-    dst_ip_counts = Counter()
-    dst_port_counts = Counter()
-    error_counts = Counter()
-    
-    for pkt in packets:
-        if pkt.haslayer(IP):
-            dst_ip_counts[pkt[IP].dst] += 1
-        is_error = False
-        if pkt.haslayer(TCP):
-            dst_port_counts[pkt[TCP].dport] += 1
-            if 'S' in pkt[TCP].flags and 'A' not in pkt[TCP].flags: is_error = True
-            if 'R' in pkt[TCP].flags: is_error = True
-        elif pkt.haslayer(UDP):
-            dst_port_counts[pkt[UDP].dport] += 1
-        if is_error and pkt.haslayer(IP):
-            error_counts[pkt[IP].dst] += 1
-
-    def get_service(pkt):
-        if pkt.haslayer(TCP):
-            port = pkt[TCP].dport
-            if port == 80: return 'http'
-            if port == 21: return 'ftp'
-            if port == 22: return 'ssh'
-        return 'other'
-
-    def get_flag(pkt):
-        if pkt.haslayer(TCP):
-            flags = pkt[TCP].flags
-            if 'S' in flags and 'A' not in flags: return 'S0' 
-            if 'R' in flags: return 'REJ'
-        return 'SF'
-
-    for pkt in packets:
-        if pkt.haslayer(IP):
-            row = {col: 0 for col in MODEL_FEATURES}
-            row['src_ip'] = pkt[IP].src
-            row['dst_ip'] = pkt[IP].dst
-            row['protocol_type'] = 'tcp' if pkt.haslayer(TCP) else 'udp' if pkt.haslayer(UDP) else 'icmp'
-            row['service'] = get_service(pkt)
-            row['flag'] = get_flag(pkt)
-            row['src_bytes'] = len(pkt[IP].payload)
-            
-            count = dst_ip_counts[pkt[IP].dst]
-            row['count'] = count
-            row['srv_count'] = count
-            row['dst_host_count'] = count
-            row['dst_host_srv_count'] = count
-            
-            error_count = error_counts[pkt[IP].dst]
-            error_rate = error_count / count if count > 0 else 0
-            
-            row['serror_rate'] = error_rate
-            row['dst_host_serror_rate'] = error_rate
-            row['same_srv_rate'] = 1.0
-            row['dst_host_same_srv_rate'] = 1.0
-            
-            captured_data.append(row)
-            
-    return pd.DataFrame(captured_data)
-
-# --- 6. AI Summary Generator ---
+# --- 5. AI Summary Generator ---
 def generate_smart_summary(df, col_name, model_name):
     """
     Acts as a simulated AI analyst.
