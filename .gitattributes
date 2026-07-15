@@ -1,0 +1,7 @@
+* text=auto eol=lf
+
+*.pkl binary
+*.pcap binary
+*.pcapng binary
+*.jpg binary
+*.png binary
