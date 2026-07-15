@@ -1,20 +1,21 @@
 # Release Process
 
-## Versioning
+## Versioning (this project's scheme)
 
-Semantic Versioning (`MAJOR.MINOR.PATCH`), plus pre-release identifiers
-during the run-up to a stable release:
+This project uses major-version milestones rather than strict semver
+breaking-change semantics:
 
 ```
-1.0.0-alpha.1   pre-release, unstable, naming/scope still open
-1.0.0-beta.1    feature-complete, stabilizing
-1.0.0-rc.1      release candidate
-1.0.0           first stable release
+v1.0.0   pre-release — repo restructure, docs, CI, test scaffolding
+v2.0.0   stable release — the working dashboard as it stands today
+v3.0.0+  active feature development going forward
 ```
 
-- **Major** — breaking changes (feature schema, model I/O contract, CLI/API).
+Within each major milestone, standard `MINOR.PATCH` rules still apply:
 - **Minor** — new functionality, backward compatible.
 - **Patch** — bug fixes only.
+- Pre-release identifiers (`-alpha.1`, `-beta.1`, `-rc.1`) are used before a
+  major milestone is cut stable.
 
 ## Release naming
 
