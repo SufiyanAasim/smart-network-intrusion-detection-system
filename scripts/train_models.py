@@ -1,4 +1,5 @@
-"""Retrain the Random Forest and Decision Tree models from data/nsl-kdd/.
+"""Retrain the Random Forest, Decision Tree, and Isolation Forest models from
+data/nsl-kdd/.
 
 This mirrors the training steps in notebooks/TheCode.ipynb so models can be
 regenerated from the CLI instead of re-running the notebook. Run from repo
@@ -9,7 +10,7 @@ import os
 
 import joblib
 import pandas as pd
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.ensemble import IsolationForest, RandomForestClassifier
 from sklearn.preprocessing import LabelEncoder
 from sklearn.tree import DecisionTreeClassifier
 
@@ -41,9 +42,16 @@ def main():
     dt_model = DecisionTreeClassifier(random_state=42)
     dt_model.fit(X_train, y_train)
 
+    # Isolation Forest is unsupervised: fit only on normal traffic so it
+    # learns what "normal" looks like and flags deviations as anomalies,
+    # rather than learning attack signatures like RF/DT do.
+    iforest_model = IsolationForest(n_estimators=100, contamination="auto", random_state=42)
+    iforest_model.fit(X_train[y_train == 0])
+
     os.makedirs(MODELS_DIR, exist_ok=True)
     joblib.dump(rf_model, os.path.join(MODELS_DIR, "rf_model.pkl"))
     joblib.dump(dt_model, os.path.join(MODELS_DIR, "dt_model.pkl"))
+    joblib.dump(iforest_model, os.path.join(MODELS_DIR, "iforest_model.pkl"))
     print(f"Saved models to {MODELS_DIR}")
 
 

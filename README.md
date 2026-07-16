@@ -1,23 +1,27 @@
 # Network Analysis Intrusion System (NIDS)
 
-![version](https://img.shields.io/badge/version-2.0.0-blue)
+![version](https://img.shields.io/badge/version-3.0.0--alpha.1-blue)
 ![license](https://img.shields.io/badge/license-MIT-green)
 ![python](https://img.shields.io/badge/python-3.11%2B-blue)
 
-🚀 **v2.0.0 — Codename: Vanguard — Baseline**
+🚀 **v3.0.0-alpha.1** — active feature development on top of v2.0.0 (Vanguard) baseline
 
 A Streamlit dashboard that detects network intrusions in real time, comparing
-a **Random Forest** and a **Decision Tree** classifier trained on the
-NSL-KDD dataset — side by side, on the same traffic.
+a **Random Forest**, a **Decision Tree**, and an **Isolation Forest**
+classifier trained on the NSL-KDD dataset — side by side, on the same traffic.
 
 ## Features
 
-- 📡 **Live capture** — sniffs live traffic (scapy) and classifies it packet-by-packet.
+- 📡 **Live capture** — sniffs live traffic (scapy) and classifies it with a real
+  trailing 2-second/100-connection windowed feature computation (not a static snapshot).
 - 📂 **Pcap upload** — drop a Wireshark `.pcap`/`.pcapng` file and get an instant report.
-- 🌲🌳 **Dual-model comparison** — Random Forest vs. Decision Tree, same input, side by side.
+- 🌲🌳🧭 **Three-model comparison** — Random Forest, Decision Tree, and (optionally)
+  Isolation Forest anomaly detection, side by side on the same input.
 - 📊 **Visual analytics** — threat distribution, packet-size box plots, volume-vs-size scatter plots.
 - 🤖 **Rule-based summary** — flags likely attacker/victim IPs when threat levels spike.
-- 🧠 **Explainable AI tab** — feature-importance charts for both models.
+- 🔔 **Alerting** — critical-threat notifications via Slack webhook, generic webhook, or email (opt-in via `.env`).
+- 📜 **Persistent history** — every detection is saved to SQLite (`data/history.db`), beyond the 100-row live view.
+- 🧠 **Explainable AI tab** — feature-importance charts for RF/DT.
 
 ## Screenshots
 
@@ -85,12 +89,13 @@ docker compose up --build
 ├── config/            feature schema reference
 ├── data/
 │   ├── nsl-kdd/       NSL-KDD train/test sets
-│   └── pcaps/         sample .pcap files for manual testing
+│   ├── pcaps/         sample .pcap files for manual testing
+│   └── history.db     persisted detection history (SQLite, gitignored)
 ├── docs/              architecture, guides, releases, troubleshooting
-├── models/            trained rf_model.pkl / dt_model.pkl
+├── models/            trained rf_model.pkl / dt_model.pkl / iforest_model.pkl
 ├── notebooks/         original training notebook
 ├── scripts/           train_models.py (CLI retraining)
-├── src/nids/          app.py (UI) + features.py (pure logic)
+├── src/nids/          app.py (UI), features.py, storage.py, alerts.py, anomaly.py (pure logic)
 └── tests/             pytest suite
 ```
 
