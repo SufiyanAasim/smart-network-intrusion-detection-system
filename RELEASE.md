@@ -19,16 +19,20 @@ Within each major milestone, standard `MINOR.PATCH` rules still apply:
 
 ## Release naming
 
-Each stable release gets a codename from one theme (chosen once, not mixed).
-Format:
+Theme: **Guardian / Security**. Each stable release gets a codename from
+this theme only (never mixed with another theme). Format:
 
 ```
 🚀 NIDS vX.Y.Z
 Codename: <Theme Name> — <Title>
 ```
 
-The codename/title for v1.0.0 is not finalized yet — tracked in
-[docs/releases/](docs/releases/).
+| Version | Codename | Title |
+| --- | --- | --- |
+| v1.0.0-alpha.1 | Sentinel | Foundation |
+| v2.0.0 | Vanguard | Baseline |
+
+Future candidates from the same theme: Aegis, Warden, Bastion, Watchtower, Cipher, Shield.
 
 ## Branch flow
 
