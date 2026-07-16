@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [7.0.0] - 2026-07-17
+
+### Added
+- **Dashboard auth/login** (`src/nids/auth.py`) — optional PBKDF2-SHA256
+  password gate. Set `NIDS_AUTH_PASSWORD_HASH` (generate with
+  `python -m nids.auth`) and, optionally, `NIDS_AUTH_USERNAME`; the app then
+  shows a login form and halts until authenticated, with a sidebar logout.
+  Passwords are never stored or compared in plaintext; when unconfigured the
+  app runs open (backward compatible).
+- **Auto-block suggestion** (`src/nids/firewall.py`) — for a flagged
+  attacker IP, a "🚫 Suggested block rules" expander shows ready-to-copy
+  firewall commands (iptables, ufw, nftables, Windows netsh). Shown in the
+  critical-threat summary and the per-IP drill-down. **Suggestion only** —
+  the app never executes these commands or changes any system state; the
+  operator reviews and applies them manually.
+- Tests for both modules (`tests/test_auth.py`, `tests/test_firewall.py`).
+
+### Notes
+- Codename: **Bastion** (Guardian/Security theme), 2-feature release per the
+  locked v4–v8 cadence (see RELEASE.md).
+- No new third-party dependencies (both features are standard-library only).
+
 ## [6.0.0] - 2026-07-17
 
 ### Added
