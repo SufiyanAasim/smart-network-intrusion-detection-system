@@ -66,3 +66,16 @@ def test_query_sources_returns_distinct_sources_sorted(tmp_path):
     storage.save_detections(_sample_df(), source="live", db_path=str(db_path))
 
     assert storage.query_sources(db_path=str(db_path)) == ["live", "upload"]
+
+
+def test_query_trend_buckets_and_counts_attacks(tmp_path):
+    db_path = tmp_path / "history.db"
+    storage.save_detections(_sample_df(), source="live", db_path=str(db_path))
+
+    trend = storage.query_trend(db_path=str(db_path))
+
+    assert len(trend) == 1  # both rows saved in the same call -> same minute bucket
+    row = trend.iloc[0]
+    assert row["total"] == 2
+    assert row["rf_attacks"] == 1
+    assert row["dt_attacks"] == 0

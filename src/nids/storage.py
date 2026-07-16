@@ -109,6 +109,30 @@ def query_sources(db_path=DEFAULT_DB_PATH):
         )["source"].tolist()
 
 
+def query_trend(bucket_format="%Y-%m-%d %H:%M", db_path=DEFAULT_DB_PATH):
+    """Return RF/DT attack vs. total counts bucketed by time, oldest first.
+
+    `bucket_format` is an SQLite strftime() format applied to `captured_at`
+    (ISO 8601 UTC) — the default buckets by minute. Powers the History tab's
+    trend chart.
+    """
+    with get_connection(db_path) as conn:
+        return pd.read_sql_query(
+            """
+            SELECT
+                strftime(?, captured_at) AS bucket,
+                SUM(CASE WHEN rf_verdict LIKE '%ATTACK%' THEN 1 ELSE 0 END) AS rf_attacks,
+                SUM(CASE WHEN dt_verdict LIKE '%ATTACK%' THEN 1 ELSE 0 END) AS dt_attacks,
+                COUNT(*) AS total
+            FROM detections
+            GROUP BY bucket
+            ORDER BY bucket
+            """,
+            conn,
+            params=(bucket_format,),
+        )
+
+
 def query_summary(db_path=DEFAULT_DB_PATH):
     """Return total rows and attack counts per model across all history."""
     with get_connection(db_path) as conn:

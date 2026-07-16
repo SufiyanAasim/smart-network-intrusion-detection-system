@@ -34,6 +34,11 @@ RAW_PACKET_BUFFER = WINDOW_CONNECTIONS * 3
 # sustained attack doesn't spam Slack/email/webhook on every Streamlit rerun.
 ALERT_COOLDOWN_SECONDS = int(os.environ.get("ALERT_COOLDOWN_SECONDS", "60"))
 
+# Default CRITICAL threshold (% of traffic flagged as attack) before a
+# sidebar slider lets the user adjust it per session. SUSPICIOUS is anything
+# above 0% and below this.
+DEFAULT_CRITICAL_THRESHOLD_PCT = int(os.environ.get("CRITICAL_THRESHOLD_PCT", "20"))
+
 # --- 1. Page Configuration ---
 st.set_page_config(page_title="Network Intrusion Detection", page_icon="🛡️", layout="wide")
 
@@ -143,6 +148,14 @@ if iforest_model is not None:
 else:
     st.sidebar.caption("Isolation Forest model not found — run `python scripts/train_models.py` to enable it.")
 
+st.sidebar.header("⚙️ Thresholds")
+critical_threshold_pct = st.sidebar.slider(
+    "🚨 CRITICAL threshold (% flagged as attack)",
+    min_value=5, max_value=100, value=DEFAULT_CRITICAL_THRESHOLD_PCT, step=5,
+    help="Traffic at or above this percentage is flagged CRITICAL. Anything "
+         "above 0% and below this is SUSPICIOUS.",
+)
+
 with st.sidebar.expander("ℹ️ About this project"):
     st.markdown(
         f"""
@@ -157,10 +170,14 @@ with st.sidebar.expander("ℹ️ About this project"):
     )
 
 # --- 5. AI Summary Generator ---
-def generate_smart_summary(df, col_name, model_name):
+def generate_smart_summary(df, col_name, model_name, critical_threshold=DEFAULT_CRITICAL_THRESHOLD_PCT):
     """
     Acts as a simulated AI analyst.
     Calculates stats and generates a text summary based on logic.
+
+    `critical_threshold` (0-100) is the % of ATTACK-flagged traffic at or
+    above which status escalates to CRITICAL; anything above 0% and below
+    it is SUSPICIOUS. Configurable via the sidebar slider.
     """
     total = len(df)
     if total == 0:
@@ -174,7 +191,7 @@ def generate_smart_summary(df, col_name, model_name):
 
     if attack_pct == 0:
         st.success(f"**Status: SAFE.** No malicious traffic detected in the last {total} packets. Network behavior appears normal.")
-    elif attack_pct < 20:
+    elif attack_pct < critical_threshold:
         st.warning(f"**Status: SUSPICIOUS.** Detected {attack_count} anomalous packets ({attack_pct:.1f}%). Monitor specific IPs.")
     else:
         # Critical Analysis
@@ -263,7 +280,7 @@ def render_model_column(df_display, verdict_col, model_name, common_cols):
     st.altair_chart(scatter_chart, use_container_width=True)
 
     # 5. AI SUMMARY
-    generate_smart_summary(df_display, verdict_col, model_name)
+    generate_smart_summary(df_display, verdict_col, model_name, critical_threshold_pct)
 
 
 def display_results(df, key_suffix="", allow_download=True):
@@ -425,6 +442,29 @@ with tab4:
         m1.metric("Total detections", total)
         m2.metric("RF attacks flagged", rf_attacks, f"{rf_attacks / total * 100:.1f}%")
         m3.metric("DT attacks flagged", dt_attacks, f"{dt_attacks / total * 100:.1f}%")
+
+        st.markdown("##### Attacks over time")
+        trend_df = storage.query_trend()
+        if len(trend_df) >= 2:
+            trend_long = trend_df.melt(
+                id_vars=["bucket"], value_vars=["rf_attacks", "dt_attacks"],
+                var_name="Model", value_name="Attacks",
+            )
+            trend_long["Model"] = trend_long["Model"].map(
+                {"rf_attacks": "Random Forest", "dt_attacks": "Decision Tree"}
+            )
+            trend_chart = alt.Chart(trend_long).mark_line(point=True).encode(
+                x=alt.X("bucket:N", title="Time (UTC, per-minute)"),
+                y=alt.Y("Attacks:Q"),
+                color=alt.Color(
+                    "Model:N",
+                    scale=alt.Scale(domain=["Random Forest", "Decision Tree"], range=["#00CC96", "#FFB84C"]),
+                ),
+                tooltip=["bucket", "Model", "Attacks"],
+            ).properties(height=250)
+            st.altair_chart(trend_chart, use_container_width=True)
+        else:
+            st.caption("Trend chart needs at least 2 minutes of history — capture more traffic to see it.")
 
         st.markdown("##### Most recent 200 detections")
         sources = ["All"] + storage.query_sources()
