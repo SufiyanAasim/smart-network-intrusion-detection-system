@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [4.0.0] - 2026-07-16
+
+### Added
+- Configurable CRITICAL threshold — a sidebar slider (`⚙️ Thresholds`,
+  default 20%, env default via `CRITICAL_THRESHOLD_PCT`) replaces the
+  hardcoded 20% cutoff in `generate_smart_summary`. SUSPICIOUS is still
+  anything above 0% and below this.
+- History tab trend chart — "Attacks over time" line chart (RF vs. DT,
+  per-minute buckets) via new `storage.query_trend()`.
+
+### Notes
+- Codename: **Citadel** (Guardian/Security theme), 2-feature release per
+  the locked v4–v8 cadence (see RELEASE.md).
+
 ## [3.0.0] - 2026-07-16
 
 ### Added
