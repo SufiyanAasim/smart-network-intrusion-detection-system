@@ -4,11 +4,11 @@
 
 # Network Analysis Intrusion System (NIDS)
 
-![version](https://img.shields.io/badge/version-6.0.0-blue)
+![version](https://img.shields.io/badge/version-7.0.0-blue)
 ![license](https://img.shields.io/badge/license-MIT-green)
 ![python](https://img.shields.io/badge/python-3.11%2B-blue)
 
-🚀 **v6.0.0 — Codename: Aegis**
+🚀 **v7.0.0 — Codename: Bastion**
 
 A Streamlit dashboard that detects network intrusions in real time, comparing
 a **Random Forest**, a **Decision Tree**, and an **Isolation Forest**
@@ -33,6 +33,8 @@ classifier trained on the NSL-KDD dataset — side by side, on the same traffic.
 - ⚙️ **Configurable thresholds** — adjust the CRITICAL/SUSPICIOUS cutoff live via a sidebar slider.
 - 🧠 **Explainable AI tab** — feature-importance charts for RF/DT.
 - 🩺 **Capture readiness** — detects a missing Npcap/libpcap provider and tells you how to fix it.
+- 🔒 **Optional login** — gate the dashboard behind a PBKDF2-hashed password (off by default).
+- 🚫 **Block suggestions** — ready-to-copy firewall rules for a flagged attacker IP (never auto-applied).
 
 ## Screenshots
 
