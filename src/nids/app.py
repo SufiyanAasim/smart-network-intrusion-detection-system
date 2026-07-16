@@ -1,4 +1,5 @@
 import base64
+import io
 import os
 import sys
 
@@ -57,6 +58,22 @@ def _logo_data_uri():
 
 
 _logo_b64 = _logo_data_uri()
+
+
+def _dataframe_to_excel_bytes(df):
+    """Serialize a DataFrame to .xlsx bytes, or None if openpyxl is missing.
+
+    Excel export is optional — if the openpyxl engine isn't installed the
+    UI just hides the Excel button and keeps CSV, rather than erroring.
+    """
+    try:
+        buffer = io.BytesIO()
+        with pd.ExcelWriter(buffer, engine="openpyxl") as writer:
+            df.to_excel(writer, index=False, sheet_name="detections")
+        return buffer.getvalue()
+    except ImportError:
+        return None
+
 
 header_logo, header_text = st.columns([1, 9])
 with header_logo:
@@ -251,7 +268,7 @@ def render_model_column(df_display, verdict_col, model_name, common_cols):
     getattr(st, style['banner'])(style['label'])
 
     # 1. TABLE
-    st.dataframe(df_display[common_cols + [verdict_col]], use_container_width=True)
+    st.dataframe(df_display[common_cols + [verdict_col]], width='stretch')
     st.markdown("---")
 
     # 2. BAR CHART
@@ -260,7 +277,7 @@ def render_model_column(df_display, verdict_col, model_name, common_cols):
     chart = alt.Chart(counts).mark_bar().encode(
         x='Status', y='Count', color=alt.Color('Status', scale=alt.Scale(domain=['✅ Normal', '🚨 ATTACK'], range=['#00CC96', '#EF553B']))
     ).properties(height=200, title="Threat Distribution")
-    st.altair_chart(chart, use_container_width=True)
+    st.altair_chart(chart, width='stretch')
 
     # 3. BOX PLOT (Log)
     box_chart = alt.Chart(df_display).mark_boxplot().encode(
@@ -268,7 +285,7 @@ def render_model_column(df_display, verdict_col, model_name, common_cols):
         y=alt.Y('src_bytes', scale=alt.Scale(type='symlog')),
         color=verdict_col,
     ).properties(height=200, title="Packet Size (Log)")
-    st.altair_chart(box_chart, use_container_width=True)
+    st.altair_chart(box_chart, width='stretch')
 
     # 4. SCATTER PLOT (Log-Log)
     scatter_chart = alt.Chart(df_display).mark_circle(size=100).encode(
@@ -277,7 +294,7 @@ def render_model_column(df_display, verdict_col, model_name, common_cols):
         color=alt.Color(verdict_col, scale=alt.Scale(domain=['✅ Normal', '🚨 ATTACK'], range=['#00CC96', '#EF553B'])),
         tooltip=['src_ip', 'src_bytes', 'count', verdict_col]
     ).properties(height=300, title="Volume vs Size").interactive()
-    st.altair_chart(scatter_chart, use_container_width=True)
+    st.altair_chart(scatter_chart, width='stretch')
 
     # 5. AI SUMMARY
     generate_smart_summary(df_display, verdict_col, model_name, critical_threshold_pct)
@@ -418,11 +435,11 @@ with tab3:
     with col1:
         st.info("Random Forest Features")
         imp = pd.DataFrame({'Feature': MODEL_FEATURES, 'Importance': rf_model.feature_importances_}).sort_values('Importance', ascending=False).head(10)
-        st.altair_chart(alt.Chart(imp).mark_bar().encode(x='Importance', y=alt.Y('Feature', sort='-x'), color=alt.value('#00CC96')), use_container_width=True)
+        st.altair_chart(alt.Chart(imp).mark_bar().encode(x='Importance', y=alt.Y('Feature', sort='-x'), color=alt.value('#00CC96')), width='stretch')
     with col2:
         st.warning("Decision Tree Features")
         imp = pd.DataFrame({'Feature': MODEL_FEATURES, 'Importance': dt_model.feature_importances_}).sort_values('Importance', ascending=False).head(10)
-        st.altair_chart(alt.Chart(imp).mark_bar().encode(x='Importance', y=alt.Y('Feature', sort='-x'), color=alt.value('#FFB84C')), use_container_width=True)
+        st.altair_chart(alt.Chart(imp).mark_bar().encode(x='Importance', y=alt.Y('Feature', sort='-x'), color=alt.value('#FFB84C')), width='stretch')
 
 # === TAB 4: History (persisted beyond the in-memory 100-row buffer) ===
 with tab4:
@@ -462,12 +479,58 @@ with tab4:
                 ),
                 tooltip=["bucket", "Model", "Attacks"],
             ).properties(height=250)
-            st.altair_chart(trend_chart, use_container_width=True)
+            st.altair_chart(trend_chart, width='stretch')
         else:
             st.caption("Trend chart needs at least 2 minutes of history — capture more traffic to see it.")
 
+        st.markdown("##### Export full history")
+        st.caption(f"Download all {total} persisted detections (not just the view below).")
+        all_history = storage.query_all()
+        exp_csv, exp_xlsx = st.columns(2)
+        with exp_csv:
+            st.download_button(
+                "⬇️ Download CSV (all history)",
+                all_history.to_csv(index=False).encode("utf-8"),
+                "nids_history.csv",
+                "text/csv",
+                width='stretch',
+            )
+        with exp_xlsx:
+            xlsx_bytes = _dataframe_to_excel_bytes(all_history)
+            if xlsx_bytes is not None:
+                st.download_button(
+                    "⬇️ Download Excel (all history)",
+                    xlsx_bytes,
+                    "nids_history.xlsx",
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    width='stretch',
+                )
+            else:
+                st.caption("Excel export needs `openpyxl` (`pip install openpyxl`).")
+
+        st.divider()
+        st.markdown("##### 🔎 Drill down by source IP")
+        ip_options = ["(select an IP)"] + storage.query_distinct_ips()
+        selected_ip = st.selectbox(
+            "Source IP", ip_options,
+            help="See every past detection for one source IP across all sessions.",
+        )
+        if selected_ip != "(select an IP)":
+            ip_summary = storage.query_ip_summary(selected_ip)
+            ip_total = int(ip_summary["total"] or 0)
+            ip_rf = int(ip_summary["rf_attacks"] or 0)
+            ip_dt = int(ip_summary["dt_attacks"] or 0)
+
+            d1, d2, d3 = st.columns(3)
+            d1.metric("Detections", ip_total)
+            d2.metric("RF attacks", ip_rf, f"{(ip_rf / ip_total * 100) if ip_total else 0:.1f}%")
+            d3.metric("DT attacks", ip_dt, f"{(ip_dt / ip_total * 100) if ip_total else 0:.1f}%")
+            st.caption(f"First seen: {ip_summary['first_seen']} · Last seen: {ip_summary['last_seen']} (UTC)")
+            st.dataframe(storage.query_by_ip(selected_ip), width='stretch')
+
+        st.divider()
         st.markdown("##### Most recent 200 detections")
         sources = ["All"] + storage.query_sources()
         selected_source = st.selectbox("Filter by source", sources)
         source_filter = None if selected_source == "All" else selected_source
-        st.dataframe(storage.query_recent(limit=200, source=source_filter), use_container_width=True)
+        st.dataframe(storage.query_recent(limit=200, source=source_filter), width='stretch')
