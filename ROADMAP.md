@@ -36,13 +36,21 @@ against the feature quota below.
 | v7.0.0 | Bastion | 1) Dashboard auth/login — 2) Auto-block suggestion (firewall rule snippet for a flagged IP) |
 | v8.0.0 | **Cipher** (grand) | 1) Model-retraining CI pipeline — 2) Multi-user roles/permissions — 3) REST API for detections — 4) Encrypted history-db storage option — 5) Extra alert integrations (PagerDuty/Teams) |
 
-## v4.0.0 — Citadel (next)
+## v4.0.0 — Citadel (done)
 
-1. **Configurable thresholds** — CRITICAL (currently hardcoded ≥20%) and
-   SUSPICIOUS (>0%) cutoffs become adjustable via a sidebar slider (and/or
-   `.env` defaults), instead of fixed constants in `generate_smart_summary`.
-2. **History trend chart** — a time-series chart on the "📜 History" tab
-   (attacks vs. normal over time), not just the current flat table.
+1. [x] **Configurable thresholds** — CRITICAL threshold is now a sidebar
+       slider (`⚙️ Thresholds`, default 20%, env default via
+       `CRITICAL_THRESHOLD_PCT`), replacing the hardcoded constant in
+       `generate_smart_summary`.
+2. [x] **History trend chart** — "Attacks over time" line chart (RF vs. DT,
+       per-minute buckets) on the "📜 History" tab, via `storage.query_trend()`.
+
+## v5.0.0 — Bulwark (next)
+
+1. **Full history export** — download the entire persisted `data/history.db`
+   as CSV/Excel from the History tab, not just the current 200-row view.
+2. **Per-IP drill-down** — click a flagged `src_ip` to see all its past
+   detections across sessions.
 
 ## Infra (not counted against feature quota, pick up opportunistically)
 - [ ] CI job that smoke-tests `streamlit run` boots without error.
