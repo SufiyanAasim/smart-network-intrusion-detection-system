@@ -27,22 +27,22 @@ this theme only (never mixed with another theme). Format:
 Codename: <Theme Name> — <Title>
 ```
 
-| Version | Codename | Title | Feature scale |
-| --- | --- | --- | --- |
-| v1.0.0-alpha.1 | Sentinel | Foundation | — (restructure/docs/CI) |
-| v2.0.0 | Vanguard | Baseline | — (baseline tag) |
-| v3.0.0 | Watchtower | *(pending title)* | 2 new features |
-| v4.0.0 | Citadel | *(pending title)* | 2 new features |
-| v5.0.0 | Bulwark | *(pending title)* | 2 new features |
-| v6.0.0 | Aegis | *(pending title)* | **5 new features (grand release)** |
-| v7.0.0 | Bastion | *(pending title)* | 2 new features |
-| v8.0.0 | Cipher | *(pending title)* | **5 new features (grand release)** |
+| Version | Codename | Features |
+| --- | --- | --- |
+| v1.0.0-alpha.1 | Sentinel | — (restructure/docs/CI) |
+| v2.0.0 | Vanguard | — (baseline tag) |
+| v3.0.0 | Watchtower | Windowed capture, persistence, alerting, 3rd model, UX/branding (consolidation release) |
+| v4.0.0 | Citadel | 1) Configurable thresholds — 2) History trend chart |
+| v5.0.0 | Bulwark | 1) Full history export — 2) Per-IP drill-down |
+| v6.0.0 | **Aegis** | **5 (grand):** GeoIP map, PDF export, throughput graph, sound alerts, Npcap install banner |
+| v7.0.0 | Bastion | 1) Dashboard auth/login — 2) Auto-block suggestion |
+| v8.0.0 | **Cipher** | **5 (grand):** retraining pipeline, multi-user roles, REST API, encrypted storage, extra alert integrations |
 
 This sequence (v3–v8) was decided upfront so the codename theme stays
-consistent and each release's scope is set before work starts: v3, v4, v5,
+consistent and each release's scope is fixed before work starts: v4, v5,
 and v7 are regular 2-feature releases; v6 (Aegis) and v8 (Cipher) are grand
-releases that bundle 5 new features each. Titles are chosen per-release
-when its scope is finalized (see docs/releases/).
+releases bundling 5 features each. Full detail per release is in
+ROADMAP.md and, once shipped, `docs/releases/vX.Y.Z.md`.
 
 ## Branch flow
 
