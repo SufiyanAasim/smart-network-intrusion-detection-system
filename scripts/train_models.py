@@ -7,16 +7,21 @@ root: `python scripts/train_models.py`.
 """
 
 import os
-
-import joblib
-import pandas as pd
-from sklearn.ensemble import IsolationForest, RandomForestClassifier
-from sklearn.preprocessing import LabelEncoder
-from sklearn.tree import DecisionTreeClassifier
-
-from nids.features import MODEL_FEATURES, preprocess_data
+import sys
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+_SRC_DIR = os.path.join(BASE_DIR, "src")
+if _SRC_DIR not in sys.path:
+    sys.path.insert(0, _SRC_DIR)
+
+import joblib  # noqa: E402
+import pandas as pd  # noqa: E402
+from sklearn.ensemble import IsolationForest, RandomForestClassifier  # noqa: E402
+from sklearn.preprocessing import LabelEncoder  # noqa: E402
+from sklearn.tree import DecisionTreeClassifier  # noqa: E402
+
+from nids.features import MODEL_FEATURES, preprocess_data  # noqa: E402
+
 DATA_DIR = os.path.join(BASE_DIR, "data", "nsl-kdd")
 MODELS_DIR = os.path.join(BASE_DIR, "models")
 
