@@ -4,11 +4,11 @@
 
 # Network Analysis Intrusion System (NIDS)
 
-![version](https://img.shields.io/badge/version-3.0.0--alpha.1-blue)
+![version](https://img.shields.io/badge/version-3.0.0-blue)
 ![license](https://img.shields.io/badge/license-MIT-green)
 ![python](https://img.shields.io/badge/python-3.11%2B-blue)
 
-🚀 **v3.0.0-alpha.1** — active feature development on top of v2.0.0 (Vanguard) baseline
+🚀 **v3.0.0 — Codename: Watchtower**
 
 A Streamlit dashboard that detects network intrusions in real time, comparing
 a **Random Forest**, a **Decision Tree**, and an **Isolation Forest**

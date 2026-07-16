@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [3.0.0] - 2026-07-16
+
 ### Added
 - Real windowed `count`/`srv_count`/`*serror_rate`/`*same_srv_rate` feature
   computation in `src/nids/features.py` (trailing 2s / 100-connection
@@ -46,6 +48,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - `display_results` refactored to a single `render_model_column` helper
   shared by all model columns (2 or 3), removing the duplicated
   RF/DT rendering blocks.
+
+### Notes
+- Codename: **Watchtower** (Guardian/Security theme).
+- Starting with v4.0.0, releases follow a fixed cadence: 2 new features per
+  release, except v6.0.0 (Aegis) and v8.0.0 (Cipher) which are grand
+  releases bundling 5 new features each. See RELEASE.md.
 
 ## [2.0.0] - 2026-07-15
 
