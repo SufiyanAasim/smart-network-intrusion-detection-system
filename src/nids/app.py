@@ -25,7 +25,7 @@ import altair as alt  # noqa: E402
 import time  # noqa: E402
 
 from nids.features import MODEL_FEATURES, WINDOW_CONNECTIONS, preprocess_data, packets_to_df  # noqa: E402
-from nids import storage, alerts, anomaly, geo, reporting, throughput, notify, netcheck  # noqa: E402
+from nids import storage, alerts, anomaly, geo, reporting, throughput, notify, netcheck, auth, firewall  # noqa: E402
 from nids import __version__ as NIDS_VERSION  # noqa: E402
 
 # Raw packets kept in session_state for live capture, so packets_to_df can
@@ -59,6 +59,44 @@ def _logo_data_uri():
 
 
 _logo_b64 = _logo_data_uri()
+
+
+def _require_login():
+    """Gate the app behind a login form when auth is configured.
+
+    No-op (returns immediately) when NIDS_AUTH_PASSWORD_HASH is unset, so the
+    app stays open by default. When configured, an unauthenticated session
+    sees only the login form and the rest of the script is halted via
+    st.stop().
+    """
+    if not auth.is_auth_configured():
+        return
+    if st.session_state.get("authenticated"):
+        return
+
+    if _logo_b64:
+        st.markdown(
+            f'<div style="text-align:center"><img src="data:image/svg+xml;base64,{_logo_b64}" width="80" alt="NIDS logo"/></div>',
+            unsafe_allow_html=True,
+        )
+    st.markdown("<h3 style='text-align:center'>🔒 NIDS — Sign in</h3>", unsafe_allow_html=True)
+
+    with st.form("login_form"):
+        username = st.text_input("Username")
+        password = st.text_input("Password", type="password")
+        submitted = st.form_submit_button("Sign in")
+
+    if submitted:
+        if auth.check_credentials(username, password):
+            st.session_state["authenticated"] = True
+            st.rerun()
+        else:
+            st.error("Invalid username or password.")
+
+    st.stop()
+
+
+_require_login()
 
 
 def _dataframe_to_excel_bytes(df):
@@ -157,6 +195,13 @@ if _logo_b64:
         unsafe_allow_html=True,
     )
 
+# Logout (only shown when auth is active and the user is signed in).
+if auth.is_auth_configured() and st.session_state.get("authenticated"):
+    st.sidebar.caption(f"Signed in as **{auth.configured_username()}**")
+    if st.sidebar.button("🔓 Log out"):
+        st.session_state["authenticated"] = False
+        st.rerun()
+
 # Sidebar Metrics
 st.sidebar.header("📊 Model Accuracy")
 st.sidebar.info(f"**🌲 RF**: {rf_acc*100:.2f}%")
@@ -194,6 +239,23 @@ with st.sidebar.expander("ℹ️ About this project"):
         """
     )
 
+def render_block_suggestions(ip):
+    """Show copy-paste firewall block rules for a flagged IP (suggestion only).
+
+    Renders nothing for IPs that shouldn't be blocked (loopback/invalid).
+    These commands are never executed by the app — the operator reviews and
+    applies them manually.
+    """
+    rules = firewall.block_rule_snippets(ip)
+    if not rules:
+        return
+    with st.expander(f"🚫 Suggested block rules for {ip}"):
+        st.caption("Review before applying — NIDS never runs these for you.")
+        for tool, command in rules.items():
+            st.markdown(f"**{tool}**")
+            st.code(command, language="bash")
+
+
 # --- 5. AI Summary Generator ---
 def generate_smart_summary(df, col_name, model_name, critical_threshold=DEFAULT_CRITICAL_THRESHOLD_PCT):
     """
@@ -230,6 +292,8 @@ def generate_smart_summary(df, col_name, model_name, critical_threshold=DEFAULT_
             f"- **Suspected Attacker:** {top_attacker}\n"
             f"- **Recommendation:** Immediate isolation of {top_attacker} is recommended."
         )
+
+        render_block_suggestions(top_attacker)
 
         cooldown_key = f"last_alert_{model_name}"
         last_alert_at = st.session_state.get(cooldown_key, 0.0)
@@ -630,6 +694,7 @@ with tab4:
             d2.metric("RF attacks", ip_rf, f"{(ip_rf / ip_total * 100) if ip_total else 0:.1f}%")
             d3.metric("DT attacks", ip_dt, f"{(ip_dt / ip_total * 100) if ip_total else 0:.1f}%")
             st.caption(f"First seen: {ip_summary['first_seen']} · Last seen: {ip_summary['last_seen']} (UTC)")
+            render_block_suggestions(selected_ip)
             st.dataframe(storage.query_by_ip(selected_ip), width='stretch')
 
         st.divider()

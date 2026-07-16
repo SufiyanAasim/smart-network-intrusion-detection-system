@@ -67,10 +67,20 @@ against the feature quota below.
 5. [x] **Npcap install-check banner** — capture-readiness detection
        (`src/nids/netcheck.py`).
 
-## v7.0.0 — Bastion (next, 2 features)
+## v7.0.0 — Bastion (done, 2 features)
 
-1. Dashboard auth/login.
-2. Auto-block suggestion (firewall rule snippet for a flagged IP).
+1. [x] **Dashboard auth/login** — optional PBKDF2 password gate
+       (`src/nids/auth.py`), off by default.
+2. [x] **Auto-block suggestion** — copy-paste firewall rules for a flagged
+       IP (`src/nids/firewall.py`), suggestion-only.
+
+## v8.0.0 — Cipher (next, grand release: 5 features)
+
+1. Model-retraining CI pipeline.
+2. Multi-user roles/permissions.
+3. REST API for detections.
+4. Encrypted history-db storage option.
+5. Extra alert integrations (PagerDuty/Teams).
 
 ## Infra (not counted against feature quota, pick up opportunistically)
 - [ ] CI job that smoke-tests `streamlit run` boots without error.
