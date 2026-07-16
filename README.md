@@ -4,11 +4,11 @@
 
 # Network Analysis Intrusion System (NIDS)
 
-![version](https://img.shields.io/badge/version-4.0.0-blue)
+![version](https://img.shields.io/badge/version-5.0.0-blue)
 ![license](https://img.shields.io/badge/license-MIT-green)
 ![python](https://img.shields.io/badge/python-3.11%2B-blue)
 
-🚀 **v4.0.0 — Codename: Citadel**
+🚀 **v5.0.0 — Codename: Bulwark**
 
 A Streamlit dashboard that detects network intrusions in real time, comparing
 a **Random Forest**, a **Decision Tree**, and an **Isolation Forest**
@@ -25,7 +25,7 @@ classifier trained on the NSL-KDD dataset — side by side, on the same traffic.
 - 🤖 **Rule-based summary** — flags likely attacker/victim IPs when threat levels spike.
 - 🔔 **Alerting** — critical-threat notifications via Slack webhook, generic webhook, or email (opt-in via `.env`).
 - 📜 **Persistent history** — every detection is saved to SQLite (`data/history.db`), beyond the 100-row live view,
-  with a source filter and an attacks-over-time trend chart.
+  with a source filter, an attacks-over-time trend chart, full CSV/Excel export, and per-IP drill-down.
 - ⚙️ **Configurable thresholds** — adjust the CRITICAL/SUSPICIOUS cutoff live via a sidebar slider.
 - 🧠 **Explainable AI tab** — feature-importance charts for RF/DT.
 

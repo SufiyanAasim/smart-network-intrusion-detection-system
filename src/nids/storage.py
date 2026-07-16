@@ -133,6 +133,57 @@ def query_trend(bucket_format="%Y-%m-%d %H:%M", db_path=DEFAULT_DB_PATH):
         )
 
 
+def query_all(db_path=DEFAULT_DB_PATH):
+    """Return every persisted detection, newest first.
+
+    Used for full-history export — unlike `query_recent`, there is no row
+    limit, so callers should be prepared for large results.
+    """
+    with get_connection(db_path) as conn:
+        return pd.read_sql_query(
+            "SELECT * FROM detections ORDER BY id DESC", conn
+        )
+
+
+def query_distinct_ips(db_path=DEFAULT_DB_PATH):
+    """Return every distinct source IP seen so far, sorted."""
+    with get_connection(db_path) as conn:
+        return pd.read_sql_query(
+            "SELECT DISTINCT src_ip FROM detections "
+            "WHERE src_ip IS NOT NULL ORDER BY src_ip",
+            conn,
+        )["src_ip"].tolist()
+
+
+def query_by_ip(src_ip, limit=500, db_path=DEFAULT_DB_PATH):
+    """Return all persisted detections for one source IP, newest first."""
+    with get_connection(db_path) as conn:
+        return pd.read_sql_query(
+            "SELECT * FROM detections WHERE src_ip = ? ORDER BY id DESC LIMIT ?",
+            conn,
+            params=(src_ip, limit),
+        )
+
+
+def query_ip_summary(src_ip, db_path=DEFAULT_DB_PATH):
+    """Return per-IP stats: total rows, RF/DT attack counts, first/last seen."""
+    with get_connection(db_path) as conn:
+        return pd.read_sql_query(
+            """
+            SELECT
+                COUNT(*) AS total,
+                SUM(CASE WHEN rf_verdict LIKE '%ATTACK%' THEN 1 ELSE 0 END) AS rf_attacks,
+                SUM(CASE WHEN dt_verdict LIKE '%ATTACK%' THEN 1 ELSE 0 END) AS dt_attacks,
+                MIN(captured_at) AS first_seen,
+                MAX(captured_at) AS last_seen
+            FROM detections
+            WHERE src_ip = ?
+            """,
+            conn,
+            params=(src_ip,),
+        ).iloc[0]
+
+
 def query_summary(db_path=DEFAULT_DB_PATH):
     """Return total rows and attack counts per model across all history."""
     with get_connection(db_path) as conn:

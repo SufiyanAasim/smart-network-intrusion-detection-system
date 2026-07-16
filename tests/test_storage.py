@@ -79,3 +79,44 @@ def test_query_trend_buckets_and_counts_attacks(tmp_path):
     assert row["total"] == 2
     assert row["rf_attacks"] == 1
     assert row["dt_attacks"] == 0
+
+
+def test_query_all_returns_every_row(tmp_path):
+    db_path = tmp_path / "history.db"
+    storage.save_detections(_sample_df(), source="live", db_path=str(db_path))
+    storage.save_detections(_sample_df(), source="upload", db_path=str(db_path))
+
+    all_rows = storage.query_all(db_path=str(db_path))
+
+    assert len(all_rows) == 4
+    assert set(all_rows["source"]) == {"live", "upload"}
+
+
+def test_query_distinct_ips_sorted(tmp_path):
+    db_path = tmp_path / "history.db"
+    storage.save_detections(_sample_df(), source="live", db_path=str(db_path))
+
+    assert storage.query_distinct_ips(db_path=str(db_path)) == ["10.0.0.1", "10.0.0.2"]
+
+
+def test_query_by_ip_returns_only_that_ip(tmp_path):
+    db_path = tmp_path / "history.db"
+    storage.save_detections(_sample_df(), source="live", db_path=str(db_path))
+
+    rows = storage.query_by_ip("10.0.0.1", db_path=str(db_path))
+
+    assert len(rows) == 1
+    assert set(rows["src_ip"]) == {"10.0.0.1"}
+
+
+def test_query_ip_summary_counts_and_timestamps(tmp_path):
+    db_path = tmp_path / "history.db"
+    storage.save_detections(_sample_df(), source="live", db_path=str(db_path))
+
+    ip_summary = storage.query_ip_summary("10.0.0.1", db_path=str(db_path))
+
+    assert ip_summary["total"] == 1
+    assert ip_summary["rf_attacks"] == 1  # 10.0.0.1's RF verdict is ATTACK
+    assert ip_summary["dt_attacks"] == 0
+    assert ip_summary["first_seen"] is not None
+    assert ip_summary["last_seen"] is not None
