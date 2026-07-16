@@ -54,13 +54,23 @@ against the feature quota below.
        detections across sessions + a per-IP summary, via
        `storage.query_by_ip()` / `query_ip_summary()` / `query_distinct_ips()`.
 
-## v6.0.0 — Aegis (next, grand release: 5 features)
+## v6.0.0 — Aegis (done, grand release: 5 features)
 
-1. GeoIP + attacker map.
-2. PDF report export.
-3. Real-time throughput graph.
-4. Sound/browser alert notification.
-5. Npcap install-check banner.
+1. [x] **GeoIP + source-IP geography** — IP-type breakdown + optional
+       MaxMind world map (`src/nids/geo.py`).
+2. [x] **PDF report export** — reportlab summary report
+       (`src/nids/reporting.py`).
+3. [x] **Real-time throughput graph** — live packets/sec + KB/sec chart
+       (`src/nids/throughput.py`).
+4. [x] **Sound / browser alert notification** — opt-in beep + desktop
+       notification (`src/nids/notify.py`).
+5. [x] **Npcap install-check banner** — capture-readiness detection
+       (`src/nids/netcheck.py`).
+
+## v7.0.0 — Bastion (next, 2 features)
+
+1. Dashboard auth/login.
+2. Auto-block suggestion (firewall rule snippet for a flagged IP).
 
 ## Infra (not counted against feature quota, pick up opportunistically)
 - [ ] CI job that smoke-tests `streamlit run` boots without error.

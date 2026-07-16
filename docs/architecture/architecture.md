@@ -28,8 +28,11 @@ classification + display pipeline:
 - Reused by `scripts/train_models.py` so training and inference always
   agree on the feature schema.
 
-The same reasoning applies to `storage.py`, `alerts.py`, and `anomaly.py` —
-each is pure/stdlib-only (plus pandas where needed) so it can be unit
+The same reasoning applies to the other logic modules — `storage.py`,
+`alerts.py`, `anomaly.py`, `geo.py` (IP classification + optional GeoIP),
+`reporting.py` (PDF generation), `throughput.py` (per-second aggregation),
+`notify.py` (beep/notification HTML), and `netcheck.py` (capture readiness).
+Each is pure/stdlib-only (plus pandas/optional libs where needed) so it can be unit
 tested and mocked without a Streamlit runtime.
 
 ## Live-capture windowing
