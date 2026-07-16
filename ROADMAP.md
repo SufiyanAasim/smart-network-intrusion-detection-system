@@ -45,12 +45,22 @@ against the feature quota below.
 2. [x] **History trend chart** — "Attacks over time" line chart (RF vs. DT,
        per-minute buckets) on the "📜 History" tab, via `storage.query_trend()`.
 
-## v5.0.0 — Bulwark (next)
+## v5.0.0 — Bulwark (done)
 
-1. **Full history export** — download the entire persisted `data/history.db`
-   as CSV/Excel from the History tab, not just the current 200-row view.
-2. **Per-IP drill-down** — click a flagged `src_ip` to see all its past
-   detections across sessions.
+1. [x] **Full history export** — download the entire persisted
+       `data/history.db` as CSV or Excel from the History tab, via
+       `storage.query_all()` (Excel path optional on `openpyxl`).
+2. [x] **Per-IP drill-down** — pick a source IP to see all its past
+       detections across sessions + a per-IP summary, via
+       `storage.query_by_ip()` / `query_ip_summary()` / `query_distinct_ips()`.
+
+## v6.0.0 — Aegis (next, grand release: 5 features)
+
+1. GeoIP + attacker map.
+2. PDF report export.
+3. Real-time throughput graph.
+4. Sound/browser alert notification.
+5. Npcap install-check banner.
 
 ## Infra (not counted against feature quota, pick up opportunistically)
 - [ ] CI job that smoke-tests `streamlit run` boots without error.

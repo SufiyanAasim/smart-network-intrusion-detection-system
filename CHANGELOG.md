@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [5.0.0] - 2026-07-17
+
+### Added
+- Full history export — download the **entire** persisted `data/history.db`
+  as CSV or Excel (`.xlsx`) from the History tab, not just the visible
+  200-row window. Via new `storage.query_all()` and an optional openpyxl
+  Excel path (gracefully hidden if openpyxl isn't installed).
+- Per-IP drill-down — pick a source IP on the History tab to see every past
+  detection for it across sessions, plus a per-IP summary (total, RF/DT
+  attack counts, first/last seen). Via new `storage.query_by_ip()`,
+  `storage.query_ip_summary()`, and `storage.query_distinct_ips()`.
+
+### Changed
+- Migrated all `use_container_width=True` calls to `width='stretch'`,
+  removing Streamlit's deprecation warnings from the logs.
+
+### Notes
+- Codename: **Bulwark** (Guardian/Security theme), 2-feature release per the
+  locked v4–v8 cadence (see RELEASE.md).
+- New dependency: `openpyxl>=3.1` (for the Excel export path).
+
 ## [4.0.0] - 2026-07-16
 
 ### Added
