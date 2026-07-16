@@ -46,3 +46,18 @@ Expect an acknowledgement within a few days.
 - The "Suggested block rules" feature only *displays* firewall commands for
   an operator to review and run manually. The application never executes
   them, opens privileged sockets, or modifies firewall/system state.
+
+## Roles, REST API, and encrypted backup (v8.0.0)
+
+- **Roles:** with `NIDS_AUTH_USERS`, `viewer` accounts are blocked from
+  admin-only actions (full-history and encrypted export). This is
+  UI-level access control, not a security boundary against a determined
+  user who can reach the server — pair it with network controls.
+- **REST API:** read-only. Set `NIDS_API_TOKEN` and keep it bound to
+  localhost (or behind a proxy) if the history contains sensitive IPs. It
+  ships no write endpoints.
+- **Encrypted backup:** the "Encrypted backup" download is Fernet
+  (AES-128-CBC + HMAC) via the `cryptography` package, keyed by
+  `NIDS_DB_ENCRYPTION_KEY`. This protects the *exported backup file* at
+  rest; the live `data/history.db` itself is still plaintext SQLite. Store
+  the key separately from the backups.

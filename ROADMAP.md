@@ -74,16 +74,24 @@ against the feature quota below.
 2. [x] **Auto-block suggestion** — copy-paste firewall rules for a flagged
        IP (`src/nids/firewall.py`), suggestion-only.
 
-## v8.0.0 — Cipher (next, grand release: 5 features)
+## v8.0.0 — Cipher (done, grand release: 5 features)
 
-1. Model-retraining CI pipeline.
-2. Multi-user roles/permissions.
-3. REST API for detections.
-4. Encrypted history-db storage option.
-5. Extra alert integrations (PagerDuty/Teams).
+1. [x] **Model-retraining CI pipeline** — `.github/workflows/retrain.yml`.
+2. [x] **Multi-user roles/permissions** — admin/viewer via `NIDS_AUTH_USERS`
+       (`src/nids/auth.py`).
+3. [x] **REST API for detections** — `src/nids/api.py` (`python -m nids.api`).
+4. [x] **Encrypted history-db backup** — Fernet backup (`src/nids/crypto.py`).
+5. [x] **Extra alert integrations** — PagerDuty + Microsoft Teams
+       (`src/nids/alerts.py`).
 
-## Infra (not counted against feature quota, pick up opportunistically)
-- [ ] CI job that smoke-tests `streamlit run` boots without error.
-- [ ] Model-retraining CI job triggered on `data/nsl-kdd/` changes (pulled
-      forward into v8.0.0 as a full pipeline, but a simpler CI check could
-      land earlier).
+## 🎉 Roadmap complete (v3.0.0 → v8.0.0)
+
+The Guardian/Security codename sequence is fully shipped: Watchtower,
+Citadel, Bulwark, Aegis, Bastion, Cipher. Future work is now open-ended —
+add ideas below as they come up.
+
+## Backlog (unscheduled)
+- CI job that smoke-tests `streamlit run` boots without error.
+- OpenAPI schema + write endpoints for the REST API.
+- Transparent (queryable) at-rest encryption, beyond the current backup option.
+- Containerized deployment recipe with auth + HTTPS reverse proxy.
