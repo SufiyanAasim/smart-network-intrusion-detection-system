@@ -84,14 +84,29 @@ def save_detections(df_display, source, db_path=DEFAULT_DB_PATH):
         )
 
 
-def query_recent(limit=100, db_path=DEFAULT_DB_PATH):
-    """Return the most recent `limit` persisted detections, newest first."""
+def query_recent(limit=100, source=None, db_path=DEFAULT_DB_PATH):
+    """Return the most recent `limit` persisted detections, newest first.
+
+    `source`, if given (e.g. "live" or "upload"), restricts to that source.
+    """
+    query = "SELECT * FROM detections"
+    params = []
+    if source:
+        query += " WHERE source = ?"
+        params.append(source)
+    query += " ORDER BY id DESC LIMIT ?"
+    params.append(limit)
+
+    with get_connection(db_path) as conn:
+        return pd.read_sql_query(query, conn, params=tuple(params))
+
+
+def query_sources(db_path=DEFAULT_DB_PATH):
+    """Return the distinct `source` values seen so far (e.g. ["live", "upload"])."""
     with get_connection(db_path) as conn:
         return pd.read_sql_query(
-            "SELECT * FROM detections ORDER BY id DESC LIMIT ?",
-            conn,
-            params=(limit,),
-        )
+            "SELECT DISTINCT source FROM detections ORDER BY source", conn
+        )["source"].tolist()
 
 
 def query_summary(db_path=DEFAULT_DB_PATH):

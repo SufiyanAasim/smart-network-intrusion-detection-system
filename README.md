@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="assets/images/logo.svg" alt="NIDS logo" width="120"/>
+</p>
+
 # Network Analysis Intrusion System (NIDS)
 
 ![version](https://img.shields.io/badge/version-3.0.0--alpha.1-blue)
@@ -26,6 +30,11 @@ classifier trained on the NSL-KDD dataset — side by side, on the same traffic.
 ## Screenshots
 
 Sample NSL-KDD traffic previews live in [`assets/images/`](assets/images/).
+
+## Dataset
+
+Trained on **NSL-KDD**. Source, citation, file layout, and column meanings
+are documented in [docs/DATASET.md](docs/DATASET.md).
 
 ## Architecture
 

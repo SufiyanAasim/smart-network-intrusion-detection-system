@@ -26,6 +26,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   original models if that file isn't present).
 - Tests for all of the above (`tests/test_storage.py`, `tests/test_alerts.py`,
   `tests/test_anomaly.py`, plus new windowing tests in `tests/test_features.py`).
+- `assets/images/logo.svg` — a Guardian/Security-themed shield logo, shown
+  in the app header, sidebar, and README.
+- Sidebar "ℹ️ About this project" panel and a live "NIDS v{version}" badge.
+- `st.toast` pop-up on critical-threat detection (in addition to the
+  existing in-page banner), cooldown-throttled together with alerting.
+- Packets-captured session counter in the Live Capture tab.
+- Source filter (`All` / `live` / `upload`) on the History tab
+  (`storage.query_recent(source=...)`, `storage.query_sources()`).
+- Custom dark theme (`.streamlit/config.toml`) matching the logo palette.
+- `docs/DATASET.md` — NSL-KDD source, citation, file layout, and column
+  meanings.
+- `.claude/launch.json` — one-command dev-server launch config for local previewing.
 
 ### Changed
 - Live-capture loop now keeps a rolling raw-packet buffer

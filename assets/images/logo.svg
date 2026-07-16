@@ -1,0 +1,43 @@
+<svg viewBox="0 0 200 240" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="NIDS Sentinel shield logo">
+  <title>NIDS — Network Intrusion Detection System</title>
+  <defs>
+    <linearGradient id="shieldFill" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#1E293B"/>
+      <stop offset="100%" stop-color="#0F172A"/>
+    </linearGradient>
+    <linearGradient id="ringGlow" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00CC96"/>
+      <stop offset="100%" stop-color="#22D3EE"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Shield -->
+  <path d="M100 8
+           L182 38
+           L182 118
+           C182 172 146 210 100 232
+           C54 210 18 172 18 118
+           L18 38 Z"
+        fill="url(#shieldFill)"
+        stroke="url(#ringGlow)"
+        stroke-width="4"/>
+
+  <!-- Network / radar motif: two "normal" nodes, one flagged "attack" node -->
+  <g stroke="#00CC96" stroke-width="3" fill="none" opacity="0.9">
+    <line x1="66" y1="150" x2="100" y2="104"/>
+    <line x1="134" y1="150" x2="100" y2="104"/>
+    <line x1="66" y1="150" x2="134" y2="150"/>
+  </g>
+
+  <circle cx="66" cy="150" r="10" fill="#00CC96"/>
+  <circle cx="134" cy="150" r="10" fill="#00CC96"/>
+
+  <!-- Flagged node (attacker) pulses red -->
+  <circle cx="100" cy="104" r="16" fill="#EF553B"/>
+  <circle cx="100" cy="104" r="24" fill="none" stroke="#EF553B" stroke-width="2.5" opacity="0.55"/>
+  <circle cx="100" cy="104" r="32" fill="none" stroke="#EF553B" stroke-width="1.5" opacity="0.3"/>
+
+  <!-- Checkmark base, half-hidden under the network graph to read as "protected" -->
+  <path d="M74 176 L94 196 L128 156" stroke="#F8FAFC" stroke-width="7" fill="none"
+        stroke-linecap="round" stroke-linejoin="round" opacity="0.85"/>
+</svg>

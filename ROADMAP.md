@@ -17,10 +17,21 @@
       (SQLite, `src/nids/storage.py`, "📜 History" tab).
 - [x] Critical-threat alerting (Slack / webhook / email), cooldown-throttled.
 - [x] Third model: Isolation Forest anomaly detection alongside RF/DT.
+- [x] Project logo (`assets/images/logo.svg`), sidebar/header branding, custom theme.
+- [x] UX: toast alerts, About panel, live packet counter, History source filter.
+- [x] `docs/DATASET.md` — NSL-KDD source/citation/column documentation.
 - [ ] Add CI job that smoke-tests `streamlit run` boots without error.
 - [ ] Tag `v3.0.0` once the above is verified end-to-end.
+
+## UX ideas under consideration (not yet scheduled)
+- PDF/report export in addition to CSV download.
+- Historical trend chart on the History tab (attacks over time, not just a table).
+- Per-IP drill-down: click a flagged `src_ip` to see all its past detections.
+- Configurable CRITICAL/SUSPICIOUS thresholds (currently hardcoded 0%/20%) via `.env` or a sidebar slider.
+- Sound/browser-notification option for critical alerts, in addition to the in-page toast.
+- Light/dark theme toggle in-app (Streamlit's own settings menu already offers this globally).
+- Windows Npcap install-check banner with a link to the installer, instead of only failing silently.
 
 ## Later
 - [ ] Add a model-retraining CI job triggered on `data/nsl-kdd/` changes.
 - [ ] Auth/access control if the dashboard is deployed beyond localhost.
-- [ ] PDF/report export in addition to CSV download.
