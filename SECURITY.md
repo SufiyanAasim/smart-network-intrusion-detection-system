@@ -11,7 +11,13 @@
 ## Reporting a vulnerability
 
 Do not open a public GitHub issue for security vulnerabilities. Instead,
-email the maintainer directly (see [SUPPORT.md](SUPPORT.md)) with:
+email the security maintainer directly:
+
+**Muhammad Taha Siddiqui** ([@13eeCoder](https://github.com/13eeCoder)) —
+tahasiddiqui2100@gmail.com
+(CC sufiyanaasim@outlook.com for anything affecting the models, build or release.)
+
+Include:
 
 - A description of the issue and its impact.
 - Steps to reproduce.

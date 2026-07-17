@@ -1,1 +1,71 @@
-* @sufiyansufiyan584
+# Code ownership — reviews are auto-requested from the owner of each path.
+#
+# The split follows each maintainer's domain:
+#   @SufiyanAasim — Data Science · AI/ML · MLOps · SQE
+#   @13eeCoder    — Networking · Cybersecurity
+#
+# Later rules win, so the catch-all is first.
+
+# Default: architecture and anything not claimed below.
+*                               @SufiyanAasim
+
+# ─────────────────────────────────────────────────────────────
+# Networking & cybersecurity — @13eeCoder
+# ─────────────────────────────────────────────────────────────
+
+# Packet capture and traffic analysis
+src/nids/features.py            @13eeCoder    # packets -> NSL-KDD features, TCP flags/services, 2s window
+src/nids/netcheck.py            @13eeCoder    # Npcap/libpcap capture readiness
+src/nids/throughput.py          @13eeCoder    # packets/sec + KB/sec aggregation
+src/nids/geo.py                 @13eeCoder    # IP classification (RFC1918/public) + GeoIP
+data/pcaps/                     @13eeCoder    # sample captures
+
+# Security controls and incident response
+src/nids/auth.py                @13eeCoder    # PBKDF2 login + roles
+src/nids/crypto.py              @13eeCoder    # Fernet history encryption
+src/nids/firewall.py            @13eeCoder    # block-rule suggestions
+src/nids/alerts.py              @13eeCoder    # Slack/webhook/email/PagerDuty/Teams
+src/nids/notify.py              @13eeCoder    # sound + browser notification
+SECURITY.md                     @13eeCoder    # security policy and threat model
+
+# Tests for the above stay with their module owner.
+tests/test_features.py          @13eeCoder
+tests/test_netcheck.py          @13eeCoder
+tests/test_throughput.py        @13eeCoder
+tests/test_geo.py               @13eeCoder
+tests/test_auth.py              @13eeCoder
+tests/test_auth_roles.py        @13eeCoder
+tests/test_crypto.py            @13eeCoder
+tests/test_firewall.py          @13eeCoder
+tests/test_alerts.py            @13eeCoder
+tests/test_alerts_extra.py      @13eeCoder
+tests/test_notify.py            @13eeCoder
+
+# ─────────────────────────────────────────────────────────────
+# Data science, ML, MLOps & quality — @SufiyanAasim
+# ─────────────────────────────────────────────────────────────
+
+src/nids/app.py                 @SufiyanAasim # Streamlit UI, tabs, charts
+src/nids/anomaly.py             @SufiyanAasim # Isolation Forest verdict mapping
+src/nids/storage.py             @SufiyanAasim # SQLite persistence and queries
+src/nids/reporting.py           @SufiyanAasim # PDF report generation
+src/nids/api.py                 @SufiyanAasim # read-only REST API
+
+models/                         @SufiyanAasim
+notebooks/                      @SufiyanAasim
+data/nsl-kdd/                   @SufiyanAasim
+config/                         @SufiyanAasim
+scripts/                        @SufiyanAasim
+nids.spec                       @SufiyanAasim
+Dockerfile                      @SufiyanAasim
+docker-compose.yml              @SufiyanAasim
+Makefile                        @SufiyanAasim
+pyproject.toml                  @SufiyanAasim
+.github/workflows/              @SufiyanAasim
+
+# ─────────────────────────────────────────────────────────────
+# Shared — both maintainers review
+# ─────────────────────────────────────────────────────────────
+README.md                       @SufiyanAasim @13eeCoder
+CHANGELOG.md                    @SufiyanAasim @13eeCoder
+docs/architecture/              @SufiyanAasim @13eeCoder

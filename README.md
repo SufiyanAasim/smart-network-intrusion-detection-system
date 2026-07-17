@@ -212,21 +212,21 @@ network-analysis-intrusion-system/
 │   ├── train_models.py         # CLI retraining
 │   ├── desktop_launcher.py     # Frozen .exe entry point
 │   └── build_exe.py            # PyInstaller build wrapper
-├── src/nids/               # Application package
-│   ├── app.py                  # Streamlit UI (tabs, sidebar, charts)
-│   ├── features.py             # Packets → 41 NSL-KDD features (windowed)
-│   ├── storage.py              # SQLite persistence and queries
-│   ├── anomaly.py              # Isolation Forest verdict mapping
-│   ├── alerts.py               # Slack · webhook · email · PagerDuty · Teams
-│   ├── notify.py               # Beep synthesis + browser notification
-│   ├── geo.py                  # IP classification + optional GeoIP
-│   ├── reporting.py            # PDF report generation
-│   ├── throughput.py           # Per-second throughput aggregation
-│   ├── netcheck.py             # Capture-readiness / Npcap detection
-│   ├── auth.py                 # PBKDF2 login + roles
-│   ├── firewall.py             # Block-rule suggestions
-│   ├── crypto.py               # Encrypted history backup
-│   └── api.py                  # Read-only REST API
+├── src/nids/               # Application package  (○ @SufiyanAasim · ● @13eeCoder)
+│   ├── app.py                  # ○ Streamlit UI · tabs · sidebar · charts
+│   ├── features.py             # ● Packets → 41 NSL-KDD features (2s/100-conn window)
+│   ├── netcheck.py             # ● Capture readiness · Npcap/libpcap detection
+│   ├── throughput.py           # ● Per-second packets/sec · KB/sec aggregation
+│   ├── geo.py                  # ● IP classification (RFC1918/public) + GeoIP
+│   ├── auth.py                 # ● PBKDF2-SHA256 login + admin/viewer roles
+│   ├── crypto.py               # ● Fernet-encrypted history backup
+│   ├── firewall.py             # ● iptables/ufw/nftables/netsh block suggestions
+│   ├── alerts.py               # ● Slack · webhook · email · PagerDuty · Teams
+│   ├── notify.py               # ● Beep synthesis + browser notification
+│   ├── anomaly.py              # ○ Isolation Forest verdict mapping
+│   ├── storage.py              # ○ SQLite persistence and queries
+│   ├── reporting.py            # ○ PDF report generation
+│   └── api.py                  # ○ Read-only REST API
 ├── tests/                  # pytest suite (84 tests)
 ├── nids.spec               # PyInstaller spec
 ├── Dockerfile              # Container image
@@ -279,17 +279,30 @@ See [SECURITY.md](SECURITY.md) to report a vulnerability.
         <img src="https://github.com/SufiyanAasim.png" width="72" alt="SufiyanAasim"/><br/>
         <sub><b>Mohammad Sufiyan Aasim</b></sub>
       </a><br/>
-      <sub>System Architect · AI/ML · Build & Release</sub>
+      <sub>Data Science · AI/ML · MLOps · SQE</sub>
     </td>
     <td align="center">
       <a href="https://github.com/13eeCoder">
         <img src="https://github.com/13eeCoder.png" width="72" alt="13eeCoder"/><br/>
         <sub><b>Muhammad Taha Siddiqui</b></sub>
       </a><br/>
-      <sub>UI/UX · Analytics · Testing</sub>
+      <sub>Networking · Cybersecurity</sub>
     </td>
   </tr>
 </table>
+
+### Who owns what
+
+The codebase is split along each maintainer's domain — see
+[.github/CODEOWNERS](.github/CODEOWNERS) for the authoritative per-file map.
+
+| Domain | Modules | Owner |
+| --- | --- | --- |
+| **Traffic capture & analysis** | `features.py` · `netcheck.py` · `throughput.py` · `geo.py` · `data/pcaps/` | [@13eeCoder](https://github.com/13eeCoder) |
+| **Security controls & response** | `auth.py` · `crypto.py` · `firewall.py` · `alerts.py` · `notify.py` · `SECURITY.md` | [@13eeCoder](https://github.com/13eeCoder) |
+| **Models & data science** | `anomaly.py` · `scripts/train_models.py` · `models/` · `notebooks/` · `data/nsl-kdd/` | [@SufiyanAasim](https://github.com/SufiyanAasim) |
+| **Dashboard, storage & API** | `app.py` · `storage.py` · `reporting.py` · `api.py` | [@SufiyanAasim](https://github.com/SufiyanAasim) |
+| **MLOps, build & quality** | `.github/workflows/` · `nids.spec` · `scripts/build_exe.py` · `Dockerfile` · `tests/` | [@SufiyanAasim](https://github.com/SufiyanAasim) |
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) to get involved.
 
