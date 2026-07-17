@@ -8,11 +8,19 @@
 # import time, so both must be collected or the frozen app dies on startup.
 # scapy and sklearn pull in submodules dynamically, hence the hidden imports.
 
+import os
+
 from PyInstaller.utils.hooks import collect_all, copy_metadata
 
 datas = []
 binaries = []
 hiddenimports = []
+
+# Windows icon for the .exe. Generated from the logo by
+# `python scripts/make_icon.py`; None (default icon) if it hasn't been run.
+ICON_PATH = os.path.join("assets", "images", "logo.ico")
+if not os.path.exists(ICON_PATH):
+    ICON_PATH = None
 
 # Streamlit + its front-end assets and metadata.
 for pkg in ("streamlit", "altair", "pyarrow"):
@@ -80,7 +88,7 @@ exe = EXE(
     strip=False,
     upx=False,
     console=True,  # keep the console: it shows the server URL and errors
-    icon=None,
+    icon=ICON_PATH,
 )
 
 coll = COLLECT(

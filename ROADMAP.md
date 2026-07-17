@@ -1,6 +1,6 @@
 # Roadmap
 
-## v1.0.0-alpha.1 — Sentinel · Foundation (done)
+## v1.0.0 — Sentinel · Foundation (done)
 - [x] Repo restructured to professional layout.
 - [x] Feature-engineering logic extracted and unit tested.
 - [x] CI (lint + test), issue/PR templates, Docker support.

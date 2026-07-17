@@ -242,7 +242,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - v2.0.0 is the stable baseline for where the project stands today.
 - v3.0.0 is where new feature work begins (see ROADMAP.md).
 
-## [1.0.0-alpha.1] - 2026-07-15
+## [1.0.0] - 2026-07-15
 
 ### Added
 - Streamlit dashboard comparing Random Forest and Decision Tree predictions.

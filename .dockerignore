@@ -1,0 +1,27 @@
+# Keep the build context small and the image clean.
+.git/
+.github/
+dist/
+build/
+*.log
+
+# The full NSL-KDD corpus — the Dockerfile copies only the two files the app
+# reads. Without this, the 54 MB tree is uploaded to the daemon every build.
+data/nsl-kdd/*.arff
+data/nsl-kdd/*.jpg
+data/nsl-kdd/index.html
+data/nsl-kdd/KDDTest-21.txt
+data/nsl-kdd/KDDTrain+_20Percent.txt
+data/history.db
+Dataset.zip
+
+notebooks/
+tests/
+docs/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+.venv/
+venv/
+.env
