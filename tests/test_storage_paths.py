@@ -41,7 +41,7 @@ def test_db_path_override_is_usable(monkeypatch, tmp_path):
         pd.DataFrame([{
             "src_ip": "10.0.0.1", "dst_ip": "10.0.0.9", "protocol_type": "tcp",
             "service": "http", "flag": "S0", "src_bytes": 40, "count": 1,
-            "serror_rate": 0.0, "RF Analysis": "🚨 ATTACK", "DT Analysis": "✅ Normal",
+            "serror_rate": 0.0, "RF Analysis": "Attack", "DT Analysis": "Normal",
         }]),
         source="live",
     )

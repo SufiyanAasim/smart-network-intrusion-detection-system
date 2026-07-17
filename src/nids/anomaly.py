@@ -6,8 +6,8 @@ conventions the supervised RF/DT models use elsewhere in the app.
 """
 
 def to_verdict(predictions):
-    """Map IsolationForest predictions to the UI's ATTACK/Normal labels."""
-    return ['🚨 ATTACK' if p == -1 else '✅ Normal' for p in predictions]
+    """Map IsolationForest predictions to professional Attack/Normal labels."""
+    return ["Attack" if p == -1 else "Normal" for p in predictions]
 
 
 def to_binary(predictions):

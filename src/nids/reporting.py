@@ -11,17 +11,32 @@ import io
 from datetime import datetime, timezone
 
 
+def browser_print_script(nonce=""):
+    """Return a minimal component script that prints the parent dashboard."""
+    return (
+        "<script>"
+        f"/* {nonce} */"
+        "window.parent.focus();"
+        "window.parent.print();"
+        "</script>"
+    )
+
+
 def _attack_counts(df, verdict_col):
     if verdict_col not in df.columns:
         return 0
-    return int(df[verdict_col].astype(str).str.contains("ATTACK").sum())
+    return int(
+        df[verdict_col].astype(str).str.contains("attack", case=False, na=False).sum()
+    )
 
 
 def _top_ips(df, verdict_col, ip_col="src_ip", limit=5):
     """Return [(ip, attack_count), ...] for the IPs flagged most by a model."""
     if verdict_col not in df.columns or ip_col not in df.columns:
         return []
-    attacks = df[df[verdict_col].astype(str).str.contains("ATTACK")]
+    attacks = df[
+        df[verdict_col].astype(str).str.contains("attack", case=False, na=False)
+    ]
     if attacks.empty:
         return []
     return list(attacks[ip_col].value_counts().head(limit).items())
@@ -50,6 +65,14 @@ def build_report_pdf(df_display, title="NIDS Detection Report", generated_at=Non
     rf_attacks = _attack_counts(df_display, "RF Analysis")
     dt_attacks = _attack_counts(df_display, "DT Analysis")
     anomaly_attacks = _attack_counts(df_display, "Anomaly Analysis")
+    critical_consensus = (
+        int((df_display["Triage"].astype(str) == "Critical").sum())
+        if "Triage" in df_display.columns else 0
+    )
+    average_risk = (
+        float(df_display["Risk Score"].fillna(0).mean())
+        if "Risk Score" in df_display.columns and total else 0.0
+    )
 
     buffer = io.BytesIO()
     pdf = canvas.Canvas(buffer, pagesize=A4)
@@ -75,6 +98,8 @@ def build_report_pdf(df_display, title="NIDS Detection Report", generated_at=Non
         ("Random Forest attacks flagged", rf_attacks),
         ("Decision Tree attacks flagged", dt_attacks),
         ("Isolation Forest anomalies flagged", anomaly_attacks),
+        ("Critical consensus detections", critical_consensus),
+        ("Average consensus risk", f"{average_risk:.1f}/100"),
     ):
         pdf.drawString(2.4 * cm, y, f"- {label}: {value}")
         y -= 0.6 * cm

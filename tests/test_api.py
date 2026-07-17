@@ -7,10 +7,12 @@ def _seed(db_path):
     df = pd.DataFrame([
         {"src_ip": "10.0.0.1", "dst_ip": "10.0.0.9", "protocol_type": "tcp",
          "service": "http", "flag": "S0", "src_bytes": 40, "count": 5,
-         "serror_rate": 1.0, "RF Analysis": "🚨 ATTACK", "DT Analysis": "✅ Normal"},
+         "serror_rate": 1.0, "RF Analysis": "Attack", "DT Analysis": "Attack",
+         "Anomaly Analysis": "Attack", "Triage": "Critical", "Risk Score": 100},
         {"src_ip": "10.0.0.2", "dst_ip": "10.0.0.9", "protocol_type": "tcp",
          "service": "http", "flag": "SF", "src_bytes": 120, "count": 1,
-         "serror_rate": 0.0, "RF Analysis": "✅ Normal", "DT Analysis": "✅ Normal"},
+         "serror_rate": 0.0, "RF Analysis": "Normal", "DT Analysis": "Normal",
+         "Anomaly Analysis": "Normal", "Triage": "Clear", "Risk Score": 0},
     ])
     storage.save_detections(df, source="upload", db_path=db_path)
 
@@ -28,6 +30,8 @@ def test_summary_route(tmp_path):
     assert status == 200
     assert body["total"] == 2
     assert body["rf_attacks"] == 1
+    assert body["critical_triage"] == 1
+    assert body["avg_risk_score"] == 50.0
 
 
 def test_detections_route_with_limit(tmp_path):
@@ -36,6 +40,24 @@ def test_detections_route_with_limit(tmp_path):
     status, body = api.route("/api/detections", {"limit": ["1"]}, db_path=db)
     assert status == 200
     assert body["count"] == 1
+
+
+def test_triage_route_filters_by_consensus_risk(tmp_path):
+    db = str(tmp_path / "history.db")
+    _seed(db)
+    status, body = api.route(
+        "/api/triage", {"min_risk": ["60"], "limit": ["10"]}, db_path=db
+    )
+    assert status == 200
+    assert body["count"] == 1
+    assert body["detections"][0]["risk_score"] == 100
+
+
+def test_triage_route_validates_min_risk(tmp_path):
+    db = str(tmp_path / "history.db")
+    _seed(db)
+    assert api.route("/api/triage", {"min_risk": ["bad"]}, db_path=db)[0] == 400
+    assert api.route("/api/triage", {"min_risk": ["101"]}, db_path=db)[0] == 400
 
 
 def test_ip_route(tmp_path):
@@ -89,6 +111,8 @@ def test_token_auth_enforced(monkeypatch):
     assert status == 200
     status, _ = api.route("/health", auth_header="Bearer wrong")
     assert status == 401
+    status, _ = api.route("/health", auth_header="bearer secret")
+    assert status == 200
 
 
 def test_token_auth_open_when_unset(monkeypatch):

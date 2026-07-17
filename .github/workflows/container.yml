@@ -1,0 +1,105 @@
+name: container
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - ".dockerignore"
+      - ".github/workflows/container.yml"
+      - ".streamlit/**"
+      - "Dockerfile"
+      - "assets/**"
+      - "config/**"
+      - "data/nsl-kdd/KDDTest+.txt"
+      - "data/nsl-kdd/KDDTrain+.txt"
+      - "docker-compose.yml"
+      - "models/**"
+      - "render.yaml"
+      - "requirements.txt"
+      - "src/**"
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - ".dockerignore"
+      - ".github/workflows/container.yml"
+      - ".streamlit/**"
+      - "Dockerfile"
+      - "assets/**"
+      - "config/**"
+      - "data/nsl-kdd/KDDTest+.txt"
+      - "data/nsl-kdd/KDDTrain+.txt"
+      - "docker-compose.yml"
+      - "models/**"
+      - "render.yaml"
+      - "requirements.txt"
+      - "src/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Validate Compose model
+        run: docker compose --profile api --profile capture config --quiet
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+      - name: Build runtime image
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: Dockerfile
+          load: true
+          push: false
+          tags: nids:ci
+      - name: Smoke-test dashboard
+        run: |
+          docker run --detach --name nids-dashboard-ci --publish 18501:8501 nids:ci
+          for attempt in $(seq 1 60); do
+            if curl --fail --silent --show-error http://127.0.0.1:18501/_stcore/health; then
+              exit 0
+            fi
+            if [ "$(docker inspect --format='{{.State.Running}}' nids-dashboard-ci)" != "true" ]; then
+              docker logs nids-dashboard-ci
+              exit 1
+            fi
+            sleep 2
+          done
+          docker logs nids-dashboard-ci
+          exit 1
+      - name: Smoke-test REST API
+        run: |
+          docker run --detach --name nids-api-ci --publish 18600:8600 \
+            --env NIDS_API_HOST=0.0.0.0 --env NIDS_API_PORT=8600 \
+            nids:ci python src/nids/api.py
+          for attempt in $(seq 1 30); do
+            if curl --fail --silent --show-error http://127.0.0.1:18600/health; then
+              exit 0
+            fi
+            if [ "$(docker inspect --format='{{.State.Running}}' nids-api-ci)" != "true" ]; then
+              docker logs nids-api-ci
+              exit 1
+            fi
+            sleep 1
+          done
+          docker logs nids-api-ci
+          exit 1
+      - name: Show container logs on failure
+        if: failure()
+        run: |
+          docker logs nids-dashboard-ci 2>/dev/null || true
+          docker logs nids-api-ci 2>/dev/null || true
+      - name: Remove smoke-test containers
+        if: always()
+        run: docker rm --force nids-dashboard-ci nids-api-ci 2>/dev/null || true

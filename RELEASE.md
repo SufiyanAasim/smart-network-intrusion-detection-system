@@ -23,7 +23,7 @@ Theme: **Guardian / Security**. Each stable release gets a codename from
 this theme only (never mixed with another theme). Format:
 
 ```
-🚀 NIDS vX.Y.Z
+⚡ NIDS vX.Y.Z
 Codename: <Theme Name> — <Title>
 ```
 
@@ -36,12 +36,15 @@ Codename: <Theme Name> — <Title>
 | v5.0.0 | Bulwark | 1) Full history export — 2) Per-IP drill-down |
 | v6.0.0 | **Aegis** | **5 (grand):** GeoIP map, PDF export, throughput graph, sound alerts, Npcap install banner |
 | v7.0.0 | Bastion | 1) Dashboard auth/login — 2) Auto-block suggestion |
-| v8.0.0 | **Cipher** | **5 (grand):** retraining pipeline, multi-user roles, REST API, encrypted storage, extra alert integrations |
+| v8.0.0 | **Phalanx** | **5 (grand):** retraining pipeline, multi-user roles, REST API, encrypted storage, extra alert integrations |
+| v9.0.0 | **Vigil** | **6 (grand):** Render deployment, mandatory login gate, lockout protection, cloud-aware capture, branded UI, consensus threat triage |
+| v10.0.0 | **Cipher** | Adapter selection, capture scope, role-first auth, Viewer sign-up, professional operations shell |
 
-This sequence (v3–v8) was decided upfront so the codename theme stays
+The v3–v9 sequence was decided upfront so the codename theme stays
 consistent and each release's scope is fixed before work starts: v4, v5,
-and v7 are regular 2-feature releases; v6 (Aegis) and v8 (Cipher) are grand
-releases bundling 5 features each. Full detail per release is in
+and v7 are regular 2-feature releases; v6 (Aegis), v8 (Phalanx) and v9 (Vigil) are grand
+releases (v9 includes the post-audit consensus extension). v10 (Cipher) is the
+local-capture, access, and interface milestone. Full detail per release is in
 ROADMAP.md and, once shipped, `docs/releases/vX.Y.Z.md`.
 
 ## Branch flow

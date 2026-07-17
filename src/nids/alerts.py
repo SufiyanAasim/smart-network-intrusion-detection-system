@@ -12,6 +12,7 @@ import os
 import smtplib
 import urllib.request
 from email.message import EmailMessage
+from urllib.parse import urlparse
 
 
 def _slack_webhook_url():
@@ -45,6 +46,9 @@ def _email_config():
 
 
 def _post_json(url, payload_dict, timeout=5):
+    parsed = urlparse(url)
+    if parsed.scheme not in ("http", "https") or not parsed.hostname:
+        raise ValueError("alert webhook must be an http(s) URL")
     payload = json.dumps(payload_dict).encode("utf-8")
     req = urllib.request.Request(url, data=payload, headers={"Content-Type": "application/json"})
     urllib.request.urlopen(req, timeout=timeout)  # noqa: S310 - trusted, user-configured URL
@@ -76,7 +80,7 @@ def send_teams_alert(message, webhook_url=None):
         "@context": "http://schema.org/extensions",
         "summary": "NIDS critical threat",
         "themeColor": "EF553B",
-        "title": "🚨 NIDS: Critical threat detected",
+        "title": "NIDS: Critical threat detected",
         "text": message,
     })
     return True

@@ -1,3 +1,7 @@
+# v10 reference contract; application code remains authoritative.
+schema_version: 10
+application_version: "10.0.0"
+
 # Reference list of the 41 NSL-KDD feature columns the models expect,
 # in the exact order used by src/nids/features.py::MODEL_FEATURES.
 # Keep this in sync manually if the feature set ever changes.
@@ -60,3 +64,13 @@ data:
   train: data/nsl-kdd/KDDTrain+.txt
   test: data/nsl-kdd/KDDTest+.txt
   history_db: data/history.db  # runtime-generated, gitignored
+
+triage:
+  risk_score_range: [0, 100]
+  levels: [Clear, Guarded, Elevated, Critical]
+  persistence_columns: [risk_score, triage]
+
+verdicts:
+  normal: Normal
+  attack: Attack
+  normalize_legacy_values: true

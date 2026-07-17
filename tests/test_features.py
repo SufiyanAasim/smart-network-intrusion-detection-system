@@ -17,9 +17,8 @@ def test_preprocess_data_maps_unseen_category_to_known_class():
 
     # Known categories pass through unchanged.
     assert encoded["protocol_type"].iloc[0] == le.transform(["tcp"])[0]
-    # Unseen categories map to *some* known class, not to a new/invalid code
-    # (which of the known classes it picks is an implementation detail).
-    assert encoded["protocol_type"].iloc[1] in le.transform(le.classes_).tolist()
+    # Unseen categories deterministically map to LabelEncoder's first class.
+    assert encoded["protocol_type"].iloc[1] == le.transform([le.classes_[0]])[0]
 
 
 def test_packets_to_df_empty_input_returns_empty_dataframe():
