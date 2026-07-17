@@ -113,15 +113,26 @@ docker compose up --build
 │   ├── nsl-kdd/       NSL-KDD train/test sets
 │   ├── pcaps/         sample .pcap files for manual testing
 │   └── history.db     persisted detection history (SQLite, gitignored)
-├── docs/              architecture, api, guides, releases, troubleshooting
+├── docs/              architecture, api, deployment, guides, releases, troubleshooting
 ├── models/            trained rf_model.pkl / dt_model.pkl / iforest_model.pkl
 ├── notebooks/         original training notebook
-├── scripts/           train_models.py (CLI retraining)
+├── scripts/           train_models.py, desktop_launcher.py, build_exe.py
+├── nids.spec          PyInstaller spec for the desktop build
 ├── src/nids/          app.py (UI) + pure logic: features, storage, alerts,
 │                      anomaly, geo, reporting, throughput, notify, netcheck,
 │                      auth, firewall, crypto, api
 └── tests/             pytest suite
 ```
+
+## Desktop app (.exe)
+
+```bash
+pip install -r requirements-dev.txt
+python scripts/build_exe.py     # -> dist/NIDS/NIDS.exe
+```
+
+Ship the whole `dist/NIDS/` folder. See
+[docs/deployment/desktop-exe.md](docs/deployment/desktop-exe.md).
 
 ## Testing
 

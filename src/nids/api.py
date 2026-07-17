@@ -16,12 +16,24 @@ opening a socket.
 import hmac
 import json
 import os
+import sys
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
-from urllib.parse import parse_qs, urlparse
+from urllib.parse import parse_qs, unquote, urlparse
 
-from nids import storage, __version__
+# Make `nids` importable when this module is run directly from the repo root
+# (`python -m nids.api`), which is how the docs and Makefile invoke it —
+# without this it only worked with PYTHONPATH=src already set.
+_SRC_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if _SRC_DIR not in sys.path:
+    sys.path.insert(0, _SRC_DIR)
+
+from nids import storage, __version__  # noqa: E402
 
 TOKEN_ENV = "NIDS_API_TOKEN"
+
+# Upper bound on ?limit= so a single request can't try to serialize the whole
+# history into memory.
+MAX_LIMIT = 10_000
 
 
 def _authorized(auth_header):
@@ -60,13 +72,24 @@ def route(path, query=None, auth_header=None, db_path=storage.DEFAULT_DB_PATH):
         }
 
     if path == "/api/detections":
-        limit = int(query.get("limit", ["100"])[0])
+        # A non-numeric ?limit= used to raise straight out of the handler as a
+        # 500; report it as a client error instead.
+        raw_limit = query.get("limit", ["100"])[0]
+        try:
+            limit = int(raw_limit)
+        except (TypeError, ValueError):
+            return 400, {"error": "limit must be an integer", "got": raw_limit}
+        if limit < 1 or limit > MAX_LIMIT:
+            return 400, {"error": f"limit must be between 1 and {MAX_LIMIT}", "got": limit}
         source = query.get("source", [None])[0]
         df = storage.query_recent(limit=limit, source=source, db_path=db_path)
         return 200, {"count": len(df), "detections": df.to_dict(orient="records")}
 
     if path.startswith("/api/ip/"):
-        ip = path[len("/api/ip/"):]
+        # Percent-decode so IPv6 / escaped values resolve to the stored value.
+        ip = unquote(path[len("/api/ip/"):])
+        if not ip:
+            return 400, {"error": "missing ip"}
         summary = storage.query_ip_summary(ip, db_path=db_path)
         df = storage.query_by_ip(ip, db_path=db_path)
         return 200, {
