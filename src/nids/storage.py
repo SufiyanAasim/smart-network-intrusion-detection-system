@@ -12,7 +12,10 @@ from datetime import datetime, timezone
 
 import pandas as pd
 
-DEFAULT_DB_PATH = os.path.join(
+# Where history is persisted. NIDS_DB_PATH overrides the in-repo default —
+# required for the packaged desktop build, whose code lives in a read-only
+# temp dir that is wiped on exit, and useful for pointing at a volume.
+DEFAULT_DB_PATH = os.environ.get("NIDS_DB_PATH") or os.path.join(
     os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
     "data", "history.db",
 )

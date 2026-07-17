@@ -53,6 +53,34 @@ def test_unknown_route_404():
     assert status == 404
 
 
+def test_bad_limit_is_400_not_500(tmp_path):
+    db = str(tmp_path / "history.db")
+    _seed(db)
+    status, body = api.route("/api/detections", {"limit": ["abc"]}, db_path=db)
+    assert status == 400
+    assert "limit" in body["error"]
+
+
+def test_out_of_range_limit_is_400(tmp_path):
+    db = str(tmp_path / "history.db")
+    _seed(db)
+    assert api.route("/api/detections", {"limit": ["0"]}, db_path=db)[0] == 400
+    assert api.route("/api/detections", {"limit": ["999999"]}, db_path=db)[0] == 400
+
+
+def test_ip_route_percent_decodes(tmp_path):
+    db = str(tmp_path / "history.db")
+    _seed(db)
+    status, body = api.route("/api/ip/10.0.0.1", db_path=db)
+    assert status == 200 and body["ip"] == "10.0.0.1"
+
+
+def test_empty_ip_is_400(tmp_path):
+    db = str(tmp_path / "history.db")
+    _seed(db)
+    assert api.route("/api/ip/", db_path=db)[0] == 400
+
+
 def test_token_auth_enforced(monkeypatch):
     monkeypatch.setenv(api.TOKEN_ENV, "secret")
     status, _ = api.route("/health", auth_header=None)

@@ -52,7 +52,7 @@ Most recent detections.
 - **Query params**
   | Name | Required | Default | Description |
   | --- | --- | --- | --- |
-  | `limit` | No | 100 | Max rows to return. |
+  | `limit` | No | 100 | Max rows to return (1–10000). |
   | `source` | No | — | Filter by source (`live` / `upload`). |
 - **Response** `200`
   ```json
@@ -73,6 +73,7 @@ All persisted detections for one source IP, plus a summary.
 
 | Status | Body | When |
 | --- | --- | --- |
+| 400 | `{"error": "limit must be an integer", ...}` | Malformed/out-of-range `limit`, or empty IP. |
 | 401 | `{"error": "unauthorized"}` | Missing/invalid bearer token. |
 | 404 | `{"error": "not found", "path": "..."}` | Unknown route. |
 

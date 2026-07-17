@@ -47,6 +47,19 @@ you're on an older checkout or deleted it, regenerate it with
 - A failed channel never raises; check the "🔔 Alert sent via: ..." caption
   under the summary to see which channels actually succeeded.
 
+## The desktop `NIDS.exe` opens a console but no dashboard
+
+Give it a few seconds on first launch — a ~350 MB bundle has to load
+scikit-learn and the models. The console prints the local URL once ready. If
+it exits immediately, run it from a terminal to see the error.
+
+## `NIDS.exe`: where did my detection history go?
+
+Not next to the .exe. The bundle is unpacked to a temp dir that Windows wipes
+on exit, so history is written to `%LOCALAPPDATA%\NIDS\history.db`
+(`~/.local/share/NIDS/` on Linux, `~/Library/Application Support/NIDS/` on
+macOS). Set `NIDS_DB_PATH` to put it elsewhere.
+
 ## `data/history.db` growing large / locked errors under heavy live capture
 
 SQLite handles the write volume from a single-user dashboard fine, but if

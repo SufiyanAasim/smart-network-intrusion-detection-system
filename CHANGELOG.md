@@ -7,6 +7,65 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Fixed
+- **Live capture could not be stopped.** The capture ran in a blocking
+  `while` loop, so Streamlit never got control back to process the
+  "⏹️ Stop Capture" click. Capture now processes one batch per script run and
+  reruns, keeping every widget responsive.
+- **Live capture was wrongly disabled on Linux/macOS.** `netcheck` gated the
+  Start button on scapy's `conf.use_pcap`, but scapy captures through native
+  raw sockets there (with `use_pcap` False) — only Windows actually needs
+  Npcap. A platform-appropriate privilege hint is shown instead.
+- **Corrupt/mismatched model files showed a raw traceback.** `load_resources`
+  only caught `FileNotFoundError`; it now explains a scikit-learn version
+  mismatch and points at `scripts/train_models.py`.
+- **`python -m nids.api` failed from the repo root** as documented — `api.py`
+  now bootstraps `src/` onto `sys.path` like the other entry points.
+- **REST API returned 500 on a bad `?limit=`.** Non-numeric and out-of-range
+  values now return 400, and `limit` is capped (`MAX_LIMIT`). `/api/ip/<ip>`
+  percent-decodes its argument and rejects an empty IP.
+- Download buttons now carry explicit widget keys (they render in more than
+  one tab, risking duplicate element IDs).
+- `display_results` no longer swallows diagnostics into a bare `Error: …`.
+- **History tab crashed when the database sat on another drive.** It labelled
+  the DB with `os.path.relpath(db, BASE_DIR)`, which raises `ValueError` on
+  Windows across drives — exactly the packaged build's layout (history under
+  `%LOCALAPPDATA%` on `C:`, app on `D:`), and any `NIDS_DB_PATH` on a
+  different volume. Caught by running the built `.exe`.
+- **The packaged app hung on first launch.** Streamlit's "Welcome to
+  Streamlit! … Email:" onboarding prompt blocks on stdin, which a
+  double-clicked `.exe` can never answer; the launcher now opts out. It also
+  forwards CLI flags to Streamlit instead of discarding them.
+
+### Changed (UI/UX)
+- **Sidebar accuracies are real metrics**, not `st.info`/`st.warning`/
+  `st.success` boxes — a healthy Decision Tree score sat in a yellow
+  "warning" box that read as an alarm, and those colours contradicted the
+  charts.
+- **One palette across the app** (`COLOR_RF`/`COLOR_DT`/`COLOR_IFOREST`), so a
+  model reads as the same colour in the sidebar, its results column and the
+  Explainable AI charts.
+- **Live throughput plots "seconds ago"** instead of a raw epoch-second axis
+  (`1721208000` meant nothing to a viewer).
+- **History trend uses a real temporal axis**; the nominal per-minute axis
+  became unreadable as history grew.
+- **Explainable AI explains the missing third model** rather than silently
+  showing only RF/DT (Isolation Forest exposes no `feature_importances_`).
+- Upload tab points at the bundled sample pcaps; Live Capture has proper
+  idle/waiting/paused states; Stop is disabled when idle.
+- Charts gained axis titles/units and lost redundant legends.
+
+### Added
+- **Desktop executable** — `scripts/desktop_launcher.py` + `nids.spec` +
+  `scripts/build_exe.py` produce `dist/NIDS/NIDS.exe`. See
+  [docs/deployment/desktop-exe.md](docs/deployment/desktop-exe.md).
+- `NIDS_DB_PATH` overrides the history-database location (required for the
+  packaged build, whose bundle dir is read-only and wiped on exit).
+
+### Removed
+- `IDS PROJECT/` and `Dataset/` — 76 MB of byte-identical duplicates of
+  `data/nsl-kdd/`, verified by checksum and referenced nowhere.
+
 ## [8.0.0] - 2026-07-17
 
 ### Added

@@ -90,8 +90,23 @@ The Guardian/Security codename sequence is fully shipped: Watchtower,
 Citadel, Bulwark, Aegis, Bastion, Cipher. Future work is now open-ended —
 add ideas below as they come up.
 
+## Post-v8 hardening pass (done)
+
+A full review of every file, fixing correctness and UI/UX defects found:
+- [x] Live capture is stoppable (was a blocking `while` loop).
+- [x] Capture no longer wrongly disabled on Linux/macOS.
+- [x] Friendly errors for corrupt/mismatched models; API 400s instead of 500s;
+      `python -m nids.api` works as documented.
+- [x] UI/UX: real sidebar metrics, one consistent model palette, human-readable
+      chart axes, explained Isolation Forest omission, proper empty states.
+- [x] Removed 76 MB of duplicate dataset trees (`IDS PROJECT/`, `Dataset/`).
+- [x] Desktop `.exe` build (PyInstaller) + `docs/deployment/desktop-exe.md`.
+
 ## Backlog (unscheduled)
 - CI job that smoke-tests `streamlit run` boots without error.
+- Build the desktop `.exe` in CI and attach it to GitHub releases.
 - OpenAPI schema + write endpoints for the REST API.
 - Transparent (queryable) at-rest encryption, beyond the current backup option.
 - Containerized deployment recipe with auth + HTTPS reverse proxy.
+- Cache the fitted LabelEncoders so the app doesn't parse the 19 MB
+  `KDDTrain+.txt` on every cold start (also shrinks the desktop bundle).
