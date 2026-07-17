@@ -34,3 +34,8 @@ Thumbs.db
 # Runtime-generated detection history (SQLite)
 data/history.db
 data/*.db-journal
+
+# PyInstaller desktop build output (nids.spec is tracked; artifacts are not)
+build/
+dist/
+build_exe.log
