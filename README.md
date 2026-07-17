@@ -207,7 +207,7 @@ network-analysis-intrusion-system/
 │   ├── releases/           # Per-version release notes (v1–v8)
 │   └── troubleshooting/    # Common issues and fixes
 ├── models/                 # Trained rf/dt/iforest .pkl models
-├── notebooks/              # Original training notebook
+├── notebooks/              # Original training script
 ├── scripts/
 │   ├── train_models.py         # CLI retraining
 │   ├── desktop_launcher.py     # Frozen .exe entry point

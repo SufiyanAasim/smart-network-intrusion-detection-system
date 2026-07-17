@@ -1,8 +1,8 @@
 """Retrain the Random Forest, Decision Tree, and Isolation Forest models from
 data/nsl-kdd/.
 
-This mirrors the training steps in notebooks/TheCode.ipynb so models can be
-regenerated from the CLI instead of re-running the notebook. Run from repo
+This mirrors the training steps in notebooks/TheCode.py so models can be
+regenerated from the CLI instead of re-running the script. Run from repo
 root: `python scripts/train_models.py`.
 """
 

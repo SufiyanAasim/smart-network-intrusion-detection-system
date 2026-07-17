@@ -41,6 +41,16 @@ def main():
                 "data is in data/nsl-kdd/ before building."
             )
 
+    # Generate the Windows icon if it's missing, so the .exe never ships with
+    # PyInstaller's default icon just because a step was forgotten.
+    icon = os.path.join(BASE_DIR, "assets", "images", "logo.ico")
+    if not os.path.exists(icon):
+        print("Icon missing — generating it...")
+        subprocess.run(
+            [sys.executable, os.path.join(BASE_DIR, "scripts", "make_icon.py")],
+            cwd=BASE_DIR, check=True,
+        )
+
     cmd = [sys.executable, "-m", "PyInstaller", SPEC, "--noconfirm"]
     print("Running:", " ".join(cmd))
     result = subprocess.run(cmd, cwd=BASE_DIR)
@@ -48,7 +58,7 @@ def main():
         sys.exit(result.returncode)
 
     out = os.path.join(BASE_DIR, "dist", "NIDS")
-    print(f"\n✅ Built: {out}")
+    print(f"\n[Success] Built: {out}")
     print("Ship the whole dist/NIDS/ folder. Launch it with NIDS.exe.")
 
 

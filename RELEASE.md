@@ -29,7 +29,7 @@ Codename: <Theme Name> — <Title>
 
 | Version | Codename | Features |
 | --- | --- | --- |
-| v1.0.0-alpha.1 | Sentinel | — (restructure/docs/CI) |
+| v1.0.0 | Sentinel | — (restructure/docs/CI) |
 | v2.0.0 | Vanguard | — (baseline tag) |
 | v3.0.0 | Watchtower | Windowed capture, persistence, alerting, 3rd model, UX/branding (consolidation release) |
 | v4.0.0 | Citadel | 1) Configurable thresholds — 2) History trend chart |
