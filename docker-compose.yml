@@ -1,14 +1,46 @@
 services:
   nids:
     build: .
+    image: nids:latest
     ports:
       - "8501:8501"
     volumes:
-      - ./data:/app/data
-      - ./models:/app/models
-    # Live packet capture (Tab 1) needs host network access + raw sockets.
-    # Uncomment for local live-capture testing; not needed for pcap upload only.
-    # network_mode: host
-    # cap_add:
-    #   - NET_RAW
-    #   - NET_ADMIN
+      # Named volume so detection history survives `docker compose down`.
+      # (Bind-mounting ./data would shadow the dataset baked into the image.)
+      - nids-data:/data
+      # Retrain on the host with `python scripts/train_models.py`, then
+      # restart to pick the new models up.
+      - ./models:/app/models:ro
+    environment:
+      - NIDS_DB_PATH=/data/history.db
+    # Copy .env.example to .env for alerting/login/GeoIP/encryption.
+    # All of it is optional — the app runs with none of it.
+    env_file:
+      - path: .env
+        required: false
+    restart: unless-stopped
+
+  # Live packet capture needs the host network namespace and raw-socket
+  # privileges, which the default service deliberately does not have.
+  # Start it explicitly:  docker compose --profile capture up nids-capture
+  nids-capture:
+    profiles: ["capture"]
+    build: .
+    image: nids:latest
+    network_mode: host
+    user: root          # NET_RAW is only useful with a privileged user
+    cap_add:
+      - NET_RAW
+      - NET_ADMIN
+    volumes:
+      - nids-data:/data
+      - ./models:/app/models:ro
+    environment:
+      - NIDS_DB_PATH=/data/history.db
+    env_file:
+      - path: .env
+        required: false
+    restart: unless-stopped
+
+volumes:
+  nids-data:
