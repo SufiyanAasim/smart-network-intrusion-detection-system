@@ -100,7 +100,7 @@ st.markdown(
     .block-container {max-width:1500px;padding-top:3.25rem;padding-bottom:1.25rem;}
     div[data-testid="stMetric"] {background:rgba(128,128,128,.07);
       border:1px solid rgba(128,128,128,.22);box-sizing:border-box;
-      border-radius:12px;padding:13px 15px;height:116px!important;min-height:116px!important;
+      border-radius:12px;padding:13px 15px;height:auto;min-height:96px;
       display:flex;flex-direction:column;justify-content:space-between;}
     div[data-testid="stMetric"] > div {height:auto!important;}
     div[data-baseweb="tab-list"] {gap:.35rem;
@@ -110,7 +110,12 @@ st.markdown(
     [data-testid="stDownloadButton"] button,
     [data-testid="stFormSubmitButton"] button {height:var(--nids-control-height)!important;
       min-height:var(--nids-control-height)!important;max-height:var(--nids-control-height)!important;
-      display:flex!important;align-items:center!important;justify-content:center!important;}
+      display:flex!important;align-items:center!important;justify-content:center!important;
+      white-space:nowrap!important;}
+    [data-testid="stButton"] button p,
+    [data-testid="stDownloadButton"] button p,
+    [data-testid="stFormSubmitButton"] button p {white-space:nowrap!important;
+      overflow:hidden!important;text-overflow:ellipsis!important;}
     div[data-testid="InputInstructions"] {display:none!important;}
     button[data-testid="stMainMenuButton"] {border:1px solid rgba(128,128,128,.35)!important;
       border-radius:9px!important;width:36px!important;height:36px!important;
@@ -321,7 +326,7 @@ st.markdown(
     [data-testid="stMainBlockContainer"] > [data-testid="stVerticalBlock"] {
       min-height:calc(100vh - 4.5rem);}
     [data-testid="stElementContainer"]:has(.nids-footer) {margin-top:auto;}
-    .nids-footer {border-top:0;margin-top:.45rem;padding:.45rem .2rem;
+    .nids-footer {border-top:1px solid rgba(128,128,128,.15);margin-top:.45rem;padding:.6rem .2rem;
       display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap;opacity:.72;font-size:.8rem;}
     .nids-footer a {color:inherit;text-decoration:none;font-weight:700;}
     @media print {
@@ -491,7 +496,7 @@ def render_credits():
         unsafe_allow_html=True,
     )
     with st.container(key="credits_footer_actions"):
-        col_btn, col_lic = st.columns([1, 4], vertical_alignment="center")
+        col_btn, col_lic = st.columns([2, 3], vertical_alignment="center")
         with col_btn:
             if st.button(
                 "About This Project",
@@ -1489,7 +1494,7 @@ with live_tab:
     if "capture_interface" not in st.session_state or st.session_state.capture_interface not in interface_labels:
         st.session_state.capture_interface = default_interface
 
-    adapter_column, controls_column = st.columns([3, 2], vertical_alignment="bottom")
+    adapter_column, controls_column = st.columns([2, 3], vertical_alignment="bottom")
     with adapter_column:
         selected_interface = st.selectbox(
             "Capture interface",
@@ -1503,14 +1508,14 @@ with live_tab:
         start_column, stop_column = st.columns(2)
         with start_column:
             st.button(
-                "Start Capture", icon=":material/play_arrow:", width="stretch",
+                "Start", icon=":material/play_arrow:", width="stretch",
                 disabled=not capture_ready or not interfaces or st.session_state.is_running,
                 on_click=set_capture_running,
                 args=(True,),
             )
         with stop_column:
             st.button(
-                "Stop Capture", icon=":material/stop:", width="stretch", disabled=not st.session_state.is_running,
+                "Stop", icon=":material/stop:", width="stretch", disabled=not st.session_state.is_running,
                 on_click=set_capture_running,
                 args=(False,),
             )
@@ -1523,7 +1528,7 @@ with live_tab:
     st.caption(
         f"The packet counter and fixed-height throughput graph refresh every "
         f"**{LIVE_REFRESH_SECONDS:g} seconds** while capturing. Model evidence updates on "
-        "Start/Stop transitions. Stop Capture never prepares or downloads a report."
+        "Start/Stop transitions. Stop never prepares or downloads a report."
     )
 
     @st.fragment(run_every=LIVE_REFRESH_SECONDS if st.session_state.is_running else None)
@@ -1585,14 +1590,14 @@ with live_tab:
     if capture_error:
         st.error(capture_error)
     elif st.session_state.is_running:
-        st.info("**Capturing live traffic.** Use Stop Capture to pause packet intake.")
+        st.info("**Capturing live traffic.** Use Stop to pause packet intake.")
     elif not st.session_state.continuous_df.empty:
         st.info(
             "Capture is paused. The latest throughput and model evidence are shown below; "
             "Dashboard provides aggregate session analytics."
         )
     elif capture_ready:
-        st.info("Ready to monitor. Select Start Capture to begin collecting traffic.")
+        st.info("Ready to monitor. Select Start to begin collecting traffic.")
     else:
         st.info(
             "Live capture is unavailable on this host. Upload PCAP analysis remains available."
@@ -1774,10 +1779,10 @@ with autonomy_tab:
 
     autonomy_summary = autonomy.query_summary()
     a1, a2, a3, a4 = st.columns(4)
-    a1.metric("Correlated incidents", autonomy_summary["incidents"])
-    a2.metric("Pending approvals", autonomy_summary["pending"])
+    a1.metric("Correlated", autonomy_summary["incidents"])
+    a2.metric("Pending", autonomy_summary["pending"])
     a3.metric("Active blocks", autonomy_summary["active"])
-    a4.metric("Shadow simulations", autonomy_summary["simulated"])
+    a4.metric("Shadow sims", autonomy_summary["simulated"])
 
     history_for_drift = storage.query_all()
     drift = autonomy.drift_report(history_for_drift)
