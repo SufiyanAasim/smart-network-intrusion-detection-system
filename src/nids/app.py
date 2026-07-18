@@ -1,3 +1,4 @@
+import base64
 import os
 import sys
 
@@ -7,6 +8,9 @@ import sys
 _SRC_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if _SRC_DIR not in sys.path:
     sys.path.insert(0, _SRC_DIR)
+
+_BASE_DIR = os.path.dirname(_SRC_DIR)
+_LOGO_PATH = os.path.join(_BASE_DIR, "assets", "images", "logo.svg")
 
 import streamlit as st  # noqa: E402
 import pandas as pd  # noqa: E402
@@ -20,6 +24,7 @@ import time  # noqa: E402
 
 from nids.features import MODEL_FEATURES, WINDOW_CONNECTIONS, preprocess_data, packets_to_df  # noqa: E402
 from nids import storage, alerts, anomaly  # noqa: E402
+from nids import __version__ as NIDS_VERSION  # noqa: E402
 
 # Raw packets kept in session_state for live capture, so packets_to_df can
 # compute a real trailing window instead of a single-packet snapshot.
@@ -30,13 +35,37 @@ RAW_PACKET_BUFFER = WINDOW_CONNECTIONS * 3
 ALERT_COOLDOWN_SECONDS = int(os.environ.get("ALERT_COOLDOWN_SECONDS", "60"))
 
 # --- 1. Page Configuration ---
-st.set_page_config(page_title="Network Intrusion Detection", layout="wide")
+st.set_page_config(page_title="Network Intrusion Detection", page_icon="🛡️", layout="wide")
 
-st.title("🛡️ AI Network Intrusion Detection System")
-st.markdown("Compare **Random Forest** and **Decision Tree** models side-by-side.")
+
+def _logo_data_uri():
+    """Read assets/images/logo.svg and inline it as a base64 data URI.
+
+    Embedding via <img src="data:..."> works regardless of which image
+    formats a given Streamlit version's st.image() supports, and needs no
+    extra image-processing dependency (PIL/cairosvg) just to show an SVG.
+    """
+    if not os.path.exists(_LOGO_PATH):
+        return None
+    with open(_LOGO_PATH, "rb") as f:
+        return base64.b64encode(f.read()).decode("ascii")
+
+
+_logo_b64 = _logo_data_uri()
+
+header_logo, header_text = st.columns([1, 9])
+with header_logo:
+    if _logo_b64:
+        st.markdown(
+            f'<img src="data:image/svg+xml;base64,{_logo_b64}" width="72" alt="NIDS logo"/>',
+            unsafe_allow_html=True,
+        )
+with header_text:
+    st.title("AI Network Intrusion Detection System")
+    st.markdown("Compare **Random Forest**, **Decision Tree**, and **Isolation Forest** models side-by-side.")
 
 # --- 2. Smart Path Finding ---
-BASE_DIR = os.path.dirname(_SRC_DIR)
+BASE_DIR = _BASE_DIR
 MODELS_DIR = os.path.join(BASE_DIR, "models")
 DATA_DIR = os.path.join(BASE_DIR, "data", "nsl-kdd")
 
@@ -94,6 +123,17 @@ def load_resources():
 
 rf_model, dt_model, iforest_model, encoders, rf_acc, dt_acc, iforest_acc = load_resources()
 
+# Sidebar branding
+if _logo_b64:
+    st.sidebar.markdown(
+        f'<div style="text-align:center"><img src="data:image/svg+xml;base64,{_logo_b64}" width="56" alt="NIDS logo"/></div>',
+        unsafe_allow_html=True,
+    )
+    st.sidebar.markdown(
+        f'<p style="text-align:center; opacity:0.7; margin-top:-8px;">NIDS v{NIDS_VERSION}</p>',
+        unsafe_allow_html=True,
+    )
+
 # Sidebar Metrics
 st.sidebar.header("📊 Model Accuracy")
 st.sidebar.info(f"**🌲 RF**: {rf_acc*100:.2f}%")
@@ -102,6 +142,19 @@ if iforest_model is not None:
     st.sidebar.success(f"**🧭 Isolation Forest**: {iforest_acc*100:.2f}%")
 else:
     st.sidebar.caption("Isolation Forest model not found — run `python scripts/train_models.py` to enable it.")
+
+with st.sidebar.expander("ℹ️ About this project"):
+    st.markdown(
+        f"""
+        **NIDS v{NIDS_VERSION}** compares Random Forest, Decision Tree, and
+        (optionally) Isolation Forest classifiers trained on the NSL-KDD
+        dataset, on the same live or uploaded traffic — side by side.
+
+        - Dataset source & citation: `docs/DATASET.md`
+        - Architecture notes: `docs/architecture/architecture.md`
+        - Found a bug? Use the templates under `.github/ISSUE_TEMPLATE/`.
+        """
+    )
 
 # --- 5. AI Summary Generator ---
 def generate_smart_summary(df, col_name, model_name):
@@ -140,6 +193,7 @@ def generate_smart_summary(df, col_name, model_name):
         last_alert_at = st.session_state.get(cooldown_key, 0.0)
         if time.time() - last_alert_at >= ALERT_COOLDOWN_SECONDS:
             st.session_state[cooldown_key] = time.time()
+            st.toast(f"CRITICAL THREAT — {model_name} flagged {attack_pct:.1f}% of traffic", icon="🚨")
             sent_channels = alerts.send_critical_alert(model_name, attack_pct, top_attacker, top_victim)
             if sent_channels:
                 st.caption(f"🔔 Alert sent via: {', '.join(sent_channels)}")
@@ -246,6 +300,7 @@ with tab1:
     with c1:
         start = st.button("▶️ Start Capture")
         stop = st.button("⏹️ Stop Capture")
+    status_placeholder = c2.empty()
 
     live_placeholder = st.empty()
 
@@ -257,6 +312,9 @@ with tab1:
 
     if 'is_running' not in st.session_state:
         st.session_state.is_running = False
+
+    if 'total_captured' not in st.session_state:
+        st.session_state.total_captured = 0
 
     if start:
         st.session_state.is_running = True
@@ -274,6 +332,8 @@ with tab1:
                     # (count/srv_count/*_rate) instead of a single-packet snapshot.
                     st.session_state.raw_packets.extend(pkt_batch)
                     st.session_state.raw_packets = st.session_state.raw_packets[-RAW_PACKET_BUFFER:]
+                    st.session_state.total_captured += len(pkt_batch)
+                    status_placeholder.metric("📈 Packets captured (this session)", st.session_state.total_captured)
 
                     windowed_df = packets_to_df(st.session_state.raw_packets)
                     st.session_state.continuous_df = windowed_df.tail(100)
@@ -292,6 +352,7 @@ with tab1:
                 time.sleep(0.1)
 
     elif not st.session_state.continuous_df.empty:
+        status_placeholder.metric("📈 Packets captured (this session)", st.session_state.total_captured)
         with live_placeholder.container():
             st.info("Capture Paused.")
             display_results(st.session_state.continuous_df, "continuous", allow_download=True)
@@ -366,4 +427,7 @@ with tab4:
         m3.metric("DT attacks flagged", dt_attacks, f"{dt_attacks / total * 100:.1f}%")
 
         st.markdown("##### Most recent 200 detections")
-        st.dataframe(storage.query_recent(limit=200), use_container_width=True)
+        sources = ["All"] + storage.query_sources()
+        selected_source = st.selectbox("Filter by source", sources)
+        source_filter = None if selected_source == "All" else selected_source
+        st.dataframe(storage.query_recent(limit=200, source=source_filter), use_container_width=True)

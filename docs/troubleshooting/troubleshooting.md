@@ -32,9 +32,9 @@ with. If you upgrade `scikit-learn`, retrain with
 
 ## No "🧭 Isolation Forest" column / sidebar says the model isn't found
 
-`models/iforest_model.pkl` is only created once you run
-`python scripts/train_models.py` after upgrading to v3.0.0-alpha.1 — it
-isn't in the repo by default. The app works fine with just RF/DT until then.
+`models/iforest_model.pkl` is included from v3.0.0 (Watchtower) onward. If
+you're on an older checkout or deleted it, regenerate it with
+`python scripts/train_models.py` — the app works fine with just RF/DT until then.
 
 ## Alerts aren't firing on a critical threat
 

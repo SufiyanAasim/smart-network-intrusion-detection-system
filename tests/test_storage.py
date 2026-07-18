@@ -47,3 +47,22 @@ def test_query_summary_counts_attacks_per_model(tmp_path):
     assert summary["total"] == 2
     assert summary["rf_attacks"] == 1
     assert summary["dt_attacks"] == 0
+
+
+def test_query_recent_filters_by_source(tmp_path):
+    db_path = tmp_path / "history.db"
+    storage.save_detections(_sample_df(), source="live", db_path=str(db_path))
+    storage.save_detections(_sample_df(), source="upload", db_path=str(db_path))
+
+    live_only = storage.query_recent(limit=10, source="live", db_path=str(db_path))
+
+    assert len(live_only) == 2
+    assert set(live_only["source"]) == {"live"}
+
+
+def test_query_sources_returns_distinct_sources_sorted(tmp_path):
+    db_path = tmp_path / "history.db"
+    storage.save_detections(_sample_df(), source="upload", db_path=str(db_path))
+    storage.save_detections(_sample_df(), source="live", db_path=str(db_path))
+
+    assert storage.query_sources(db_path=str(db_path)) == ["live", "upload"]

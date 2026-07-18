@@ -1,10 +1,14 @@
+<p align="center">
+  <img src="assets/images/logo.svg" alt="NIDS logo" width="120"/>
+</p>
+
 # Network Analysis Intrusion System (NIDS)
 
-![version](https://img.shields.io/badge/version-3.0.0--alpha.1-blue)
+![version](https://img.shields.io/badge/version-3.0.0-blue)
 ![license](https://img.shields.io/badge/license-MIT-green)
 ![python](https://img.shields.io/badge/python-3.11%2B-blue)
 
-🚀 **v3.0.0-alpha.1** — active feature development on top of v2.0.0 (Vanguard) baseline
+🚀 **v3.0.0 — Codename: Watchtower**
 
 A Streamlit dashboard that detects network intrusions in real time, comparing
 a **Random Forest**, a **Decision Tree**, and an **Isolation Forest**
@@ -26,6 +30,11 @@ classifier trained on the NSL-KDD dataset — side by side, on the same traffic.
 ## Screenshots
 
 Sample NSL-KDD traffic previews live in [`assets/images/`](assets/images/).
+
+## Dataset
+
+Trained on **NSL-KDD**. Source, citation, file layout, and column meanings
+are documented in [docs/DATASET.md](docs/DATASET.md).
 
 ## Architecture
 
