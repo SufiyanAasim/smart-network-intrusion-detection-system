@@ -21,7 +21,13 @@ def is_blockable(ip):
         addr = ipaddress.ip_address(ip)
     except ValueError:
         return False
-    return not (addr.is_loopback or addr.is_unspecified)
+    return not (
+        addr.is_loopback
+        or addr.is_unspecified
+        or addr.is_multicast
+        or addr.is_link_local
+        or addr.is_reserved
+    )
 
 
 def block_rule_snippets(ip):
@@ -33,10 +39,16 @@ def block_rule_snippets(ip):
     if not is_blockable(ip):
         return {}
 
+    addr = ipaddress.ip_address(ip)
+    iptables = "ip6tables" if addr.version == 6 else "iptables"
+    nft_family = "ip6" if addr.version == 6 else "ip"
+
     return {
-        "Linux (iptables)": f"sudo iptables -A INPUT -s {ip} -j DROP",
+        f"Linux ({iptables})": f"sudo {iptables} -A INPUT -s {ip} -j DROP",
         "Linux (ufw)": f"sudo ufw deny from {ip}",
-        "Linux (nftables)": f"sudo nft add rule inet filter input ip saddr {ip} drop",
+        "Linux (nftables)": (
+            f"sudo nft add rule inet filter input {nft_family} saddr {ip} drop"
+        ),
         "Windows (netsh)": (
             'netsh advfirewall firewall add rule '
             f'name="NIDS block {ip}" dir=in action=block remoteip={ip}'

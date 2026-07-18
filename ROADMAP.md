@@ -22,7 +22,7 @@ progress before the per-release scope rule (see "Release cadence") kicked in:
 - [x] `docs/DATASET.md` — NSL-KDD source/citation/column documentation.
 - [x] Tagged `v3.0.0`.
 
-## Release cadence (locked, v4.0.0–v8.0.0)
+## Release cadence (locked, v4.0.0–v10.0.0)
 
 Guardian/Security codename sequence — see RELEASE.md for the full table.
 Each release stays within its scope; CI/infra hardening doesn't count
@@ -34,7 +34,9 @@ against the feature quota below.
 | v5.0.0 | Bulwark | 1) Full history export (CSV/Excel) — 2) Per-IP drill-down |
 | v6.0.0 | **Aegis** (grand) | 1) GeoIP + attacker map — 2) PDF report export — 3) Real-time throughput graph — 4) Sound/browser alert notification — 5) Npcap install-check banner |
 | v7.0.0 | Bastion | 1) Dashboard auth/login — 2) Auto-block suggestion (firewall rule snippet for a flagged IP) |
-| v8.0.0 | **Cipher** (grand) | 1) Model-retraining CI pipeline — 2) Multi-user roles/permissions — 3) REST API for detections — 4) Encrypted history-db storage option — 5) Extra alert integrations (PagerDuty/Teams) |
+| v8.0.0 | **Phalanx** (grand) | 1) Model-retraining CI pipeline — 2) Multi-user roles/permissions — 3) REST API for detections — 4) Encrypted history-db storage option — 5) Extra alert integrations (PagerDuty/Teams) |
+| v9.0.0 | **Vigil** (grand) | Render deployment · mandatory production auth · lockout protection · cloud-aware capture · branded UI · consensus threat triage |
+| v10.0.0 | **Cipher** | Adapter selection · explicit capture scope · role-first authentication · Viewer-only sign-up · professional operations shell |
 
 ## v4.0.0 — Citadel (done)
 
@@ -74,29 +76,46 @@ against the feature quota below.
 2. [x] **Auto-block suggestion** — copy-paste firewall rules for a flagged
        IP (`src/nids/firewall.py`), suggestion-only.
 
-## v8.0.0 — Cipher (done, grand release: 5 features)
+## v8.0.0 — Phalanx (done, grand release: 5 features)
 
 1. [x] **Model-retraining CI pipeline** — `.github/workflows/retrain.yml`.
 2. [x] **Multi-user roles/permissions** — admin/viewer via `NIDS_AUTH_USERS`
        (`src/nids/auth.py`).
-3. [x] **REST API for detections** — `src/nids/api.py` (`python -m nids.api`).
+3. [x] **REST API for detections** — `src/nids/api.py` (`python src/nids/api.py`).
 4. [x] **Encrypted history-db backup** — Fernet backup (`src/nids/crypto.py`).
 5. [x] **Extra alert integrations** — PagerDuty + Microsoft Teams
        (`src/nids/alerts.py`).
 
-## 🎉 Roadmap complete (v3.0.0 → v8.0.0)
+## v9.0.0 — Vigil (done, grand release: 6 features)
+
+1. [x] **Render cloud-deployment configuration** — `render.yaml` blueprint with persistent disk.
+2. [x] **Mandatory production login gate** — auth enforced automatically in production (e.g. on Render) to prevent public security holes.
+3. [x] **Lockout rate-limiting brute-force protection** — 5-attempt limit with a 5-minute lockout in `src/nids/auth.py`.
+4. [x] **Cloud-aware Live Capture** — disables live packet sniffing in cloud/Render environments (showing a warning banner) but retains PCAP upload.
+5. [x] **Brand-customized login screen** — visually customized login UI matching the NIDS color theme.
+6. [x] **Consensus threat triage** — cross-model 0–100 risk scoring, persisted triage queue, and filtered read-only API endpoint.
+
+## v10.0.0 — Cipher (done)
+
+1. [x] **Capture-interface selector** — friendly Npcap/Scapy adapter choices with an optional environment default.
+2. [x] **Explicit capture scope** — device visibility plus whole-LAN SPAN/TAP/gateway guidance.
+3. [x] **Role-first authentication screens** — Administrator and Viewer selectors open the matching Sign in flow; Create account remains separate.
+4. [x] **Viewer-only self-registration** — opt-in local SQLite store with salted PBKDF2 hashes.
+5. [x] **Professional operations shell** — compact one-screen sidebar, top-bar notifications, Credits/About hierarchy, equal History cards, clean Material controls, stable verdict labels, and a concise footer.
+
+## 🎉 Roadmap complete (v3.0.0 → v10.0.0)
 
 The Guardian/Security codename sequence is fully shipped: Watchtower,
-Citadel, Bulwark, Aegis, Bastion, Cipher. Future work is now open-ended —
+Citadel, Bulwark, Aegis, Bastion, Phalanx, Vigil, Cipher. Future work is now open-ended —
 add ideas below as they come up.
 
-## Post-v8 hardening pass (done)
+## v9 audit and hardening pass (done)
 
 A full review of every file, fixing correctness and UI/UX defects found:
 - [x] Live capture is stoppable (was a blocking `while` loop).
 - [x] Capture no longer wrongly disabled on Linux/macOS.
 - [x] Friendly errors for corrupt/mismatched models; API 400s instead of 500s;
-      `python -m nids.api` works as documented.
+      `python src/nids/api.py` works as documented.
 - [x] UI/UX: real sidebar metrics, one consistent model palette, human-readable
       chart axes, explained Isolation Forest omission, proper empty states.
 - [x] Removed 76 MB of duplicate dataset trees (`IDS PROJECT/`, `Dataset/`).

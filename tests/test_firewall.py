@@ -6,6 +6,8 @@ def test_is_blockable():
     assert firewall.is_blockable("10.0.0.1") is True
     assert firewall.is_blockable("127.0.0.1") is False
     assert firewall.is_blockable("0.0.0.0") is False
+    assert firewall.is_blockable("224.0.0.1") is False
+    assert firewall.is_blockable("169.254.1.1") is False
     assert firewall.is_blockable("not-an-ip") is False
 
 
@@ -20,3 +22,9 @@ def test_block_rule_snippets_contains_ip_and_tools():
 def test_block_rule_snippets_empty_for_unblockable():
     assert firewall.block_rule_snippets("127.0.0.1") == {}
     assert firewall.block_rule_snippets("bad") == {}
+
+
+def test_ipv6_rules_use_ipv6_firewall_families():
+    rules = firewall.block_rule_snippets("2001:4860:4860::8888")
+    assert "Linux (ip6tables)" in rules
+    assert "ip6 saddr" in rules["Linux (nftables)"]

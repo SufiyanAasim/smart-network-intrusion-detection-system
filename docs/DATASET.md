@@ -17,8 +17,19 @@ is the same 1998 DARPA-derived data.
 - Paper: M. Tavallaee, E. Bagheri, W. Lu, A. A. Ghorbani, *"A Detailed
   Analysis of the KDD CUP 99 Data Set,"* IEEE Symposium on Computational
   Intelligence for Security and Defense Applications (CISDA), 2009.
-- Distributor: Canadian Institute for Cybersecurity (CIC), University of
-  New Brunswick — <https://www.unb.ca/cic/datasets/nsl.html>
+- Original distributor: Canadian Institute for Cybersecurity (CIC),
+  University of New Brunswick — <https://www.unb.ca/cic/datasets/nsl.html>
+
+### Where this project's copy came from
+
+The files in `data/nsl-kdd/` were obtained from the **Kaggle mirror** of
+NSL-KDD, which is what the shipped models were trained on:
+
+**<https://www.kaggle.com/datasets/hassan06/nslkdd>**
+
+It is a redistribution of the CIC/UNB dataset above — same records, same
+41-feature schema. Credit for the dataset itself belongs to CIC/UNB and the
+CISDA 2009 authors; the Kaggle mirror is only the download source.
 
 ## Files used in this repo
 
@@ -46,6 +57,19 @@ plus two trailing columns not used as model input:
   **U2R** (user-to-root, privilege escalation).
 - `difficulty_level` — how many of 21 learners in the original KDD Cup
   correctly classified that record (lower = harder).
+
+### Difficulty-level distribution
+
+Both splits are heavily skewed toward level 21 — records that all 21 original
+learners classified correctly, i.e. the *easiest* ones. This is worth knowing
+when reading the accuracy figures: a large share of the test set is made up of
+records that were already easy for 1999-era classifiers.
+
+| Training set (`KDDTrain+`) | Test set (`KDDTest+`) |
+| --- | --- |
+| ![Difficulty distribution, NSL-KDD training set](images/KDDTrain1.jpg) | ![Difficulty distribution, NSL-KDD test set](images/KDDTest1.jpg) |
+
+<sub>Figures published with the dataset by CIC/UNB.</sub>
 
 This project's models treat it as **binary** classification: `label ==
 'normal'` → `0`, anything else → `1` (`ATTACK`). See

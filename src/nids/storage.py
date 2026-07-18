@@ -34,17 +34,65 @@ CREATE TABLE IF NOT EXISTS detections (
     count INTEGER,
     serror_rate REAL,
     rf_verdict TEXT,
-    dt_verdict TEXT
+    dt_verdict TEXT,
+    anomaly_verdict TEXT,
+    triage TEXT,
+    risk_score INTEGER
 );
 """
+
+SCHEMA_MIGRATIONS = {
+    "anomaly_verdict": "TEXT",
+    "triage": "TEXT",
+    "risk_score": "INTEGER",
+}
+
+
+def _migrate_schema(conn):
+    """Bring databases from earlier releases up to the current schema."""
+    existing = {row[1] for row in conn.execute("PRAGMA table_info(detections)")}
+    for column, sql_type in SCHEMA_MIGRATIONS.items():
+        if column not in existing:
+            try:
+                conn.execute(f"ALTER TABLE detections ADD COLUMN {column} {sql_type}")
+            except sqlite3.OperationalError as exc:
+                # Two dashboard/API connections may race on the first
+                # open. Ignore only the benign duplicate-column result.
+                if "duplicate column name" not in str(exc).lower():
+                    raise
+
+    # Earlier builds stored emoji-decorated verdicts. Normalize them in place
+    # so history tables, exports, charts, and the API all use the same concise
+    # operator-facing vocabulary as new v10 detections.
+    for column in ("rf_verdict", "dt_verdict", "anomaly_verdict"):
+        conn.execute(
+            f"UPDATE detections SET {column} = 'Attack' "
+            f"WHERE {column} IS NOT NULL AND lower({column}) LIKE '%attack%' "
+            f"AND {column} != 'Attack'"
+        )
+        conn.execute(
+            f"UPDATE detections SET {column} = 'Normal' "
+            f"WHERE {column} IS NOT NULL AND lower({column}) LIKE '%normal%' "
+            f"AND {column} != 'Normal'"
+        )
+
+
+def _number(value, cast, default=0):
+    """Coerce dataframe scalars while treating None/NaN as a safe default."""
+    if value is None or pd.isna(value):
+        return default
+    return cast(value)
 
 
 @contextmanager
 def get_connection(db_path=DEFAULT_DB_PATH):
-    os.makedirs(os.path.dirname(db_path), exist_ok=True)
-    conn = sqlite3.connect(db_path)
+    parent = os.path.dirname(os.path.abspath(db_path))
+    os.makedirs(parent, exist_ok=True)
+    conn = sqlite3.connect(db_path, timeout=10)
     try:
+        conn.execute("PRAGMA busy_timeout = 10000")
         conn.execute(SCHEMA)
+        _migrate_schema(conn)
         yield conn
         conn.commit()
     finally:
@@ -66,11 +114,14 @@ def save_detections(df_display, source, db_path=DEFAULT_DB_PATH):
             row.get("protocol_type"),
             row.get("service"),
             row.get("flag"),
-            int(row.get("src_bytes", 0) or 0),
-            int(row.get("count", 0) or 0),
-            float(row.get("serror_rate", 0.0) or 0.0),
+            _number(row.get("src_bytes"), int),
+            _number(row.get("count"), int),
+            _number(row.get("serror_rate"), float, 0.0),
             row.get("RF Analysis"),
             row.get("DT Analysis"),
+            row.get("Anomaly Analysis"),
+            row.get("Triage"),
+            _number(row.get("Risk Score"), int),
         )
         for _, row in df_display.iterrows()
     ]
@@ -80,8 +131,9 @@ def save_detections(df_display, source, db_path=DEFAULT_DB_PATH):
             """
             INSERT INTO detections
                 (captured_at, source, src_ip, dst_ip, protocol_type, service, flag,
-                 src_bytes, count, serror_rate, rf_verdict, dt_verdict)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                 src_bytes, count, serror_rate, rf_verdict, dt_verdict,
+                 anomaly_verdict, triage, risk_score)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             rows,
         )
@@ -168,6 +220,19 @@ def query_by_ip(src_ip, limit=500, db_path=DEFAULT_DB_PATH):
         )
 
 
+def query_triage(min_risk=50, limit=100, source=None, db_path=DEFAULT_DB_PATH):
+    """Return the newest rows at or above a consensus risk threshold."""
+    query = "SELECT * FROM detections WHERE COALESCE(risk_score, 0) >= ?"
+    params = [int(min_risk)]
+    if source:
+        query += " AND source = ?"
+        params.append(source)
+    query += " ORDER BY risk_score DESC, id DESC LIMIT ?"
+    params.append(int(limit))
+    with get_connection(db_path) as conn:
+        return pd.read_sql_query(query, conn, params=tuple(params))
+
+
 def query_ip_summary(src_ip, db_path=DEFAULT_DB_PATH):
     """Return per-IP stats: total rows, RF/DT attack counts, first/last seen."""
     with get_connection(db_path) as conn:
@@ -177,6 +242,9 @@ def query_ip_summary(src_ip, db_path=DEFAULT_DB_PATH):
                 COUNT(*) AS total,
                 SUM(CASE WHEN rf_verdict LIKE '%ATTACK%' THEN 1 ELSE 0 END) AS rf_attacks,
                 SUM(CASE WHEN dt_verdict LIKE '%ATTACK%' THEN 1 ELSE 0 END) AS dt_attacks,
+                SUM(CASE WHEN anomaly_verdict LIKE '%ATTACK%' THEN 1 ELSE 0 END) AS anomaly_attacks,
+                SUM(CASE WHEN triage = 'Critical' THEN 1 ELSE 0 END) AS critical_triage,
+                AVG(COALESCE(risk_score, 0)) AS avg_risk_score,
                 MIN(captured_at) AS first_seen,
                 MAX(captured_at) AS last_seen
             FROM detections
@@ -195,7 +263,10 @@ def query_summary(db_path=DEFAULT_DB_PATH):
             SELECT
                 COUNT(*) AS total,
                 SUM(CASE WHEN rf_verdict LIKE '%ATTACK%' THEN 1 ELSE 0 END) AS rf_attacks,
-                SUM(CASE WHEN dt_verdict LIKE '%ATTACK%' THEN 1 ELSE 0 END) AS dt_attacks
+                SUM(CASE WHEN dt_verdict LIKE '%ATTACK%' THEN 1 ELSE 0 END) AS dt_attacks,
+                SUM(CASE WHEN anomaly_verdict LIKE '%ATTACK%' THEN 1 ELSE 0 END) AS anomaly_attacks,
+                SUM(CASE WHEN triage = 'Critical' THEN 1 ELSE 0 END) AS critical_triage,
+                AVG(COALESCE(risk_score, 0)) AS avg_risk_score
             FROM detections
             """,
             conn,

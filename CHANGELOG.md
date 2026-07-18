@@ -2,10 +2,84 @@
 
 All notable changes to this project are documented in this file.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/).
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
+Version numbers follow the milestone scheme documented in [RELEASE.md](RELEASE.md).
 
 ## [Unreleased]
+
+## [10.0.0] - 2026-07-18
+
+### Added
+- **Capture interface selector** — lists Scapy/Npcap adapters with friendly names and addresses, honours `NIDS_CAPTURE_INTERFACE`, locks the selection while capture is active, and passes the chosen adapter to `sniff()`.
+- **Capture-scope guidance** — distinguishes traffic visible to this device from whole-LAN monitoring and documents SPAN/port mirroring, TAP, and gateway sensor options.
+- **Role-first authentication** — dedicated Sign in and Create account views; clickable Administrator and Viewer selectors open the matching credential form.
+- **Viewer-only self-registration** — optional `NIDS_SIGNUP_ENABLED` flow backed by a salted PBKDF2 account store at `NIDS_AUTH_DB_PATH`; public users cannot create Administrator accounts.
+- **Application footer** — concise product identity, local-capture reminder, and project link without duplicating release metadata.
+- **Release consistency gate** — CI now fails if runtime, Docker, Compose, README, API, feature schema, release notes, codenames, or active docs drift from v10.0.0.
+- **Explicit report preparation** — Stop Capture only pauses packet intake; CSV, PDF, and Print controls appear only after the operator selects **Prepare report exports**.
+- **Professional operations shell** — compact one-screen sidebar, top-bar notification controls, a first-class Credits tab, Credits-to-About dialog flow, and equal-size History metrics.
+
+### Changed
+- Bumped the package, API, image, feature contract, and documentation to `10.0.0`; Compose now uses the version-neutral `nids-history` volume with an upgrade override.
+- Standardized the current release identity as **Cipher v10.0.0**.
+- Reserved the full product hero for Credits to remove repeated branding from operational views, and refined sidebar, contributor, and authentication layouts for responsive light and dark themes.
+- Replaced Streamlit's vertical-ellipsis menu treatment with an enclosed hamburger symbol and removed the intrusive “Press Enter to submit form” hint.
+- Slowed visible live-dashboard refreshes to a configurable 2.5-second minimum so active capture remains readable without changing packet analysis semantics.
+- Docker/Render definitions now expose a persistent authentication database path while Render keeps self-registration explicitly disabled.
+- Replaced decorative emoji controls and verdicts with Material icons and clean `Normal`/`Attack` labels; existing history is normalized automatically on database open.
+- Moved Notifications beside the deployment toolbar, moved Credits beside History, and relocated About inside Credits to remove duplicate navigation.
+- Reserved separate toolbar lanes for Streamlit's running activity indicator, file-change controls, Deploy, Notifications, and the hamburger menu so transient controls never overlap.
+- Restored Streamlit's running-person activity indicator, removed its duplicate header Stop action, and hid duplicate Rerun/Auto rerun entries from the hamburger menu when file-change controls are already presented in the header.
+- Moved the active Administrator/Viewer/Local Owner badge out of the Credits hero and into the Live Capture title row, aligned directly above Stop Capture.
+- Matched the live role badge to the Stop Capture column width for stable Administrator/Viewer alignment, enlarged the Credits logo, and italicized its supporting product description.
+- Replaced temporary instant role access with mandatory role-first credential forms, and standardized the larger logo/title grid in the About and Access dialogs.
+
+### Security
+- Self-registration is opt-in, creates Viewers only, validates strong passwords, rejects configured-name collisions case-insensitively, and never stores plaintext credentials.
+- Administrator provisioning remains configuration-only; production sign-up is disabled by default.
+
+### Notes
+- Codename: **Cipher** (Guardian/Security theme) — the capture, control, and verify release.
+
+## [9.0.0] - 2026-07-17
+
+### Added
+- **Render Cloud Deployment** (`render.yaml`) — a Render blueprint specifying a persistent volume for the SQLite database.
+- **Mandatory Production Login Gate** (`src/nids/app.py`) — enforces the login gate on Render automatically.
+- **Brute-Force Lockout Protection** (`src/nids/auth.py`) — 5-failed-attempt lockout (5 minutes) to protect public dashboards.
+- **Cloud-Aware Live Capture** (`src/nids/netcheck.py`) — disables live capture on Render (showing warning banner) but keeps PCAP upload.
+- **Brand-Customized Login UI** (`src/nids/app.py`) — visually polished login form with NIDS logo branding.
+- **Consensus Threat Triage** (`src/nids/triage.py`) — deterministic model-vote risk scoring, a dashboard triage queue, persisted risk fields, and the filtered `GET /api/triage` endpoint.
+
+### Changed
+- Bumped package version variable to `9.0.0`.
+- Replaced the previous shield with the canonical transparent circuit-shield logo and synchronized the Windows multi-resolution icon.
+- Refined hero and dialog alignment, added GitHub profile images to contributor cards, and made admin/viewer access discoverable through persistent role badges and an in-app permission matrix.
+- Added automatic, non-overriding `.env` loading for local source runs so admin/viewer accounts work without manually exporting environment variables.
+- Added separate light/dark palettes and adaptive dashboard surfaces, then refined the header hierarchy, metric cards, and batch-level consensus summary.
+- Standardized the product name as **Network Intrusion Detection System**, changed
+  the active interface codename from Sentinel to **Vigil**, and replaced the
+  inline About/Credits sections with accessible modal dialogs and contributor links.
+- Hardened and versioned the container stack: non-root/read-only runtime,
+  dynamic health checks, persistent history, opt-in API and Linux capture
+  profiles, Render Starter disk compatibility, and image health smoke tests.
+- Upgraded GitHub Actions and Dependabot configuration and added repository-wide
+  YAML linting for deployment, workflow, and application configuration.
+
+### Fixed
+- Replaced non-ASCII characters in `scripts/build_exe.py` to prevent UnicodeEncodeError crashes on standard Windows consoles.
+- PCAP identity now uses a content hash, so two different same-name uploads cannot reuse stale results; oversized captures are rejected at 50 MB.
+- Live capture permission/backend failures now stop the capture cleanly with an actionable message instead of crashing the Streamlit run.
+- Unknown categorical values now map to a deterministic encoder class rather than an unordered set element.
+- Existing v8 SQLite databases migrate in place to the v9 triage schema; relative DB paths, NaN numeric fields, and concurrent waits are handled safely.
+- IPv6 response snippets now use `ip6tables` and the nftables `ip6` family.
+- Invalid multi-user JSON, roles, duplicates, or hash shapes fail closed in the UI; hostile PBKDF2 iteration counts are rejected before hashing.
+- Corrected the documented cross-platform API/auth entry points and v8 API response examples.
+- Corrected Windows capture guidance so Administrator is only required when Npcap access is restricted.
+
+### Notes
+- Codename: **Vigil** (Guardian/Security theme) — the deploy release.
+
 
 ### Fixed
 - **Live capture could not be stopped.** The capture ran in a blocking
@@ -19,8 +93,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - **Corrupt/mismatched model files showed a raw traceback.** `load_resources`
   only caught `FileNotFoundError`; it now explains a scikit-learn version
   mismatch and points at `scripts/train_models.py`.
-- **`python -m nids.api` failed from the repo root** as documented — `api.py`
-  now bootstraps `src/` onto `sys.path` like the other entry points.
+- **The documented API entry point failed from the repo root.** The supported
+  cross-platform command is now `python src/nids/api.py`, which bootstraps
+  `src/` before importing the package.
 - **REST API returned 500 on a bad `?limit=`.** Non-numeric and out-of-range
   values now return 400, and `limit` is capped (`MAX_LIMIT`). `/api/ip/<ip>`
   percent-decodes its argument and rejects an empty IP.
@@ -80,7 +155,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   and an open app grants full access.
 - **REST API for detections** (`src/nids/api.py`) — a dependency-free,
   read-only JSON API over the history DB (`/health`, `/api/summary`,
-  `/api/detections`, `/api/ip/<ip>`), run via `python -m nids.api`. Optional
+  `/api/detections`, `/api/ip/<ip>`), run via `python src/nids/api.py`. Optional
   bearer-token auth via `NIDS_API_TOKEN`.
 - **Encrypted history-db backup** (`src/nids/crypto.py`) — download a
   Fernet-encrypted (`cryptography`) backup of `data/history.db` from the
@@ -92,7 +167,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   `test_auth_roles.py`, `test_alerts_extra.py`).
 
 ### Notes
-- Codename: **Cipher** (Guardian/Security theme) — the final **grand
+- Codename: **Phalanx** (Guardian/Security theme) — the final **grand
   release** (5 features) of the v3–v8 roadmap. See RELEASE.md.
 - New dependency: `cryptography>=42.0` (encrypted backup).
 
@@ -101,7 +176,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ### Added
 - **Dashboard auth/login** (`src/nids/auth.py`) — optional PBKDF2-SHA256
   password gate. Set `NIDS_AUTH_PASSWORD_HASH` (generate with
-  `python -m nids.auth`) and, optionally, `NIDS_AUTH_USERNAME`; the app then
+  `python src/nids/auth.py`) and, optionally, `NIDS_AUTH_USERNAME`; the app then
   shows a login form and halts until authenticated, with a sidebar logout.
   Passwords are never stored or compared in plaintext; when unconfigured the
   app runs open (backward compatible).
@@ -203,7 +278,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   original models if that file isn't present).
 - Tests for all of the above (`tests/test_storage.py`, `tests/test_alerts.py`,
   `tests/test_anomaly.py`, plus new windowing tests in `tests/test_features.py`).
-- `assets/images/logo.svg` — a Guardian/Security-themed shield logo, shown
+- `assets/images/logo.png` — a Guardian/Security-themed shield logo, shown
   in the app header, sidebar, and README.
 - Sidebar "ℹ️ About this project" panel and a live "NIDS v{version}" badge.
 - `st.toast` pop-up on critical-threat detection (in addition to the
@@ -227,7 +302,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ### Notes
 - Codename: **Watchtower** (Guardian/Security theme).
 - Starting with v4.0.0, releases follow a fixed cadence: 2 new features per
-  release, except v6.0.0 (Aegis) and v8.0.0 (Cipher) which are grand
+  release, except v6.0.0 (Aegis), v8.0.0 (Phalanx) and v9.0.0 (Vigil) which are grand
   releases bundling 5 new features each. See RELEASE.md.
 
 ## [2.0.0] - 2026-07-15

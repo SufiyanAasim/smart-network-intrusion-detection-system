@@ -1,6 +1,14 @@
 from nids import netcheck
 
 
+class _Interface:
+    def __init__(self, name, network_name="", description="", ip=""):
+        self.name = name
+        self.network_name = network_name
+        self.description = description
+        self.ip = ip
+
+
 def test_capture_readiness_ready_on_windows_when_provider_available(monkeypatch):
     monkeypatch.setattr(netcheck, "pcap_provider_available", lambda: True)
     monkeypatch.setattr(netcheck.platform, "system", lambda: "Windows")
@@ -41,3 +49,34 @@ def test_privilege_hint_is_platform_specific(monkeypatch):
     assert "Npcap" in netcheck.privilege_hint()
     monkeypatch.setattr(netcheck.platform, "system", lambda: "Linux")
     assert "CAP_NET_RAW" in netcheck.privilege_hint()
+
+
+def test_capture_interfaces_builds_stable_friendly_options(monkeypatch):
+    from scapy.all import conf
+
+    interfaces = {
+        "a": _Interface("Ethernet", "npcap-a", "Intel Ethernet", "192.0.2.10"),
+        "b": _Interface("Wi-Fi", "npcap-b", "Wi-Fi", "198.51.100.4"),
+    }
+    monkeypatch.setattr(conf.ifaces, "values", lambda: interfaces.values())
+
+    result = netcheck.capture_interfaces()
+
+    assert {item.identifier for item in result} == {"npcap-a", "npcap-b"}
+    assert any(item.label == "Intel Ethernet · 192.0.2.10" for item in result)
+
+
+def test_default_capture_interface_honours_environment(monkeypatch):
+    interfaces = [
+        netcheck.CaptureInterface("one", "Ethernet"),
+        netcheck.CaptureInterface("two", "Wi-Fi"),
+    ]
+    monkeypatch.setenv(netcheck.CAPTURE_INTERFACE_ENV, "two")
+    assert netcheck.default_capture_interface(interfaces) == "two"
+
+
+def test_default_capture_interface_falls_back_to_first(monkeypatch):
+    interfaces = [netcheck.CaptureInterface("one", "Ethernet")]
+    monkeypatch.delenv(netcheck.CAPTURE_INTERFACE_ENV, raising=False)
+    assert netcheck.default_capture_interface(interfaces) == "one"
+    assert netcheck.default_capture_interface([]) is None

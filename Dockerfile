@@ -1,55 +1,61 @@
-# NIDS dashboard image.
-#
-# Build:  docker build -t nids:latest .
-# Run:    docker run -p 8501:8501 -v nids-data:/data nids:latest
-#
-# Notes:
-# - Runs as a non-root user, so live packet capture does NOT work here by
-#   default (it needs CAP_NET_RAW). Pcap upload and everything else does.
-#   See docker-compose.yml for the opt-in capture setup.
-# - History is written to /data (a volume), not into the container layer, so
-#   it survives restarts and redeploys.
+# syntax=docker/dockerfile:1
 
-FROM python:3.11-slim
+# NIDS v10 dashboard/API runtime. The default command serves Streamlit; Compose
+# can override it to run the read-only REST API from the same immutable image.
+ARG PYTHON_VERSION=3.11
+FROM python:${PYTHON_VERSION}-slim-bookworm
 
-# libpcap is needed for scapy to import cleanly; tcpdump is only useful if the
-# container is later run with capture privileges.
-RUN apt-get update && apt-get install -y --no-install-recommends \
-        libpcap0.8 \
-    && rm -rf /var/lib/apt/lists/*
+LABEL org.opencontainers.image.title="Network Intrusion Detection System" \
+      org.opencontainers.image.description="Multi-model network intrusion detection and consensus triage" \
+      org.opencontainers.image.version="10.0.0" \
+      org.opencontainers.image.source="https://github.com/SufiyanAasim/network-analysis-intrusion-system" \
+      org.opencontainers.image.licenses="MIT"
 
-WORKDIR /app
-
-# Requirements first, so the pip layer caches across code-only changes.
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
-
-# Copy only what the app needs — `COPY . .` previously dragged in the 54 MB
-# dataset tree, the notebook, dist/ and the .git directory.
-COPY src/ ./src/
-COPY models/ ./models/
-COPY assets/ ./assets/
-COPY config/ ./config/
-COPY .streamlit/ ./.streamlit/
-# Only the two files load_resources() actually reads.
-COPY data/nsl-kdd/KDDTrain+.txt data/nsl-kdd/KDDTest+.txt ./data/nsl-kdd/
-
-ENV NIDS_DB_PATH=/data/history.db \
+ENV HOME=/home/nids \
+    NIDS_DB_PATH=/data/history.db \
+    PATH=/home/nids/.local/bin:${PATH} \
+    PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    PIP_NO_CACHE_DIR=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
     PYTHONPATH=/app/src \
     PYTHONUNBUFFERED=1
 
-# Run unprivileged.
-RUN mkdir -p /data \
-    && useradd --create-home --uid 1000 nids \
-    && chown -R nids:nids /app /data
-USER nids
+# Scapy uses libpcap inside Linux containers. Keep update/install together so
+# the package index cannot be reused independently from the install layer.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        libpcap0.8 \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN groupadd --gid 10001 nids \
+    && useradd --create-home --no-log-init --uid 10001 --gid 10001 nids \
+    && install -d -o nids -g nids /app /data
+
+WORKDIR /app
+
+# Dependency metadata changes less frequently than source, preserving the
+# expensive scientific-Python layer across code-only rebuilds.
+COPY requirements.txt ./requirements.txt
+RUN python -m pip install --requirement requirements.txt
+
+# Copy only runtime inputs. The build context is constrained by .dockerignore.
+COPY --chown=nids:nids src/ ./src/
+COPY --chown=nids:nids models/ ./models/
+COPY --chown=nids:nids assets/ ./assets/
+COPY --chown=nids:nids config/ ./config/
+COPY --chown=nids:nids .streamlit/ ./.streamlit/
+COPY --chown=nids:nids data/nsl-kdd/KDDTrain+.txt data/nsl-kdd/KDDTest+.txt ./data/nsl-kdd/
+
+USER 10001:10001
 
 EXPOSE 8501
+STOPSIGNAL SIGTERM
 
-# Streamlit's own health endpoint — lets Docker/Render notice a hung app.
+# Read the effective port at runtime: local Docker defaults to 8501 while
+# Render injects PORT. This avoids a false-unhealthy container on Render.
 HEALTHCHECK --interval=30s --timeout=5s --start-period=40s --retries=3 \
-    CMD python -c "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://localhost:8501/_stcore/health', timeout=4).status==200 else 1)"
+    CMD ["python", "-c", "import os,urllib.request; urllib.request.urlopen(f\"http://127.0.0.1:{os.getenv('PORT','8501')}/_stcore/health\", timeout=4)"]
 
-# $PORT is honoured so the same image runs on Render (which injects its own
-# port); falls back to 8501 locally.
-CMD ["sh", "-c", "streamlit run src/nids/app.py --server.port=${PORT:-8501} --server.address=0.0.0.0 --server.headless=true --browser.gatherUsageStats=false"]
+# `exec` makes Streamlit PID 1 after the shell expands Render's PORT, so
+# SIGTERM reaches the application and graceful shutdown works.
+CMD ["sh", "-c", "exec streamlit run src/nids/app.py --server.port=${PORT:-8501} --server.address=0.0.0.0 --server.headless=true --browser.gatherUsageStats=false"]
