@@ -1,0 +1,41 @@
+name: release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  draft-release:
+    name: Draft GitHub Release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Extract version and locate notes
+        id: notes
+        run: |
+          TAG_NAME="${GITHUB_REF_NAME}"
+          NOTES_FILE="docs/releases/${TAG_NAME}.md"
+          if [ -f "$NOTES_FILE" ]; then
+            echo "notes_file=$NOTES_FILE" >> $GITHUB_OUTPUT
+            TITLE=$(head -n 1 "$NOTES_FILE" | sed 's/^# *//')
+            echo "title=$TITLE" >> $GITHUB_OUTPUT
+          else
+            echo "notes_file=" >> $GITHUB_OUTPUT
+            echo "title=⚡ Smart Network Intrusion Detection System ${TAG_NAME}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create Draft Release
+        uses: softprops/action-gh-release@v2
+        with:
+          draft: true
+          name: ${{ steps.notes.outputs.title }}
+          body_path: ${{ steps.notes.outputs.notes_file }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
