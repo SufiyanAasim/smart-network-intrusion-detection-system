@@ -1,3 +1,3 @@
-"""Network Intrusion Detection System package."""
+"""Smart Network Intrusion Detection System package."""
 
-__version__ = "10.0.0"
+__version__ = "11.0.0"

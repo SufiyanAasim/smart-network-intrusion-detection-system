@@ -7,6 +7,49 @@ Version numbers follow the milestone scheme documented in [RELEASE.md](RELEASE.m
 
 ## [Unreleased]
 
+## [11.0.0] - 2026-07-18
+
+### Added
+- **Policy-governed autonomy** — Shadow, Approval, and Autonomous operating modes with a separate server-side execution gate.
+- **Incident correlation** — stable per-source/time-window incidents built from configurable high-confidence model evidence.
+- **Reversible containment** — validated no-shell firewall commands, private-source protection, active-block limits, TTL expiry, and Administrator rollback.
+- **Autonomy persistence** — SQLite incidents, actions, and append-only audit events alongside detection history.
+- **Adaptive drift monitor** — compares recent behavior with older persisted traffic and recommends reviewed offline retraining without replacing models silently.
+- **Autonomous Defense workspace** — mode controls, guardrails, metrics, approval queue, containment controls, correlated incidents, and audit evidence.
+- **Autonomy API** — read-only summary, incident, and action endpoints with bounded filters.
+
+### Changed
+- Bumped package, API, image, Compose, feature contract, documentation, and release checks to `11.0.0`.
+- Standardized the current release identity as **Cipher v11.0.0** and recorded v10.0.0 as **Argus**.
+- Standardized the human-facing product name as **Smart Network Intrusion Detection System** and re-spaced the sidebar into clear Access, model-accuracy, and threshold sections.
+- Split monitoring into a default Dashboard and a dedicated Live Capture view; moved the technology list into About to keep Credits compact.
+- Left-aligned the shared About/Role Permissions identity block and precisely centered the Live Capture recorder with the title across light and dark themes.
+- Made Credits spacing viewport-aware: compact no-scroll composition on shorter displays and more generous section/card rhythm on taller screens, while keeping contributor avatars close to their identities.
+- Returned the 60-second throughput monitor to Live Capture and replaced the Dashboard's duplicated live charts with session-level triage, model-rate, risk-distribution, and source analytics.
+- Clarified sidebar control state with a percentage-formatted threshold, an explicit all-models-active indicator, grouped access controls, and a bottom-anchored Logout action; range details now remain in the slider interaction instead of duplicate static labels.
+- Removed the redundant role badge from the Live Capture action header; the grouped Sidebar Access card is now the single non-clickable source of role identity.
+- Removed Auto rerun and transient file-change status from unauthenticated Sign in/Create account views, and added a consistent 22px brand-to-navigation gap.
+- Restored throughput and detailed model-result graphs to Live Capture, moved Print beside Record Screen there, stabilized capture reruns with fixed status/chart regions, and standardized action labels to Title Case.
+- Moved Prepare Report Exports into the Dashboard header action slot with the same cyan treatment and dimensions as Record Screen, while keeping generated downloads in the dashboard body.
+- Normalized the four dashboard analytics charts onto an equal two-column grid, reduced the triage donut radius to protect its legend, and moved the source-risk legend below its plot for matched chart widths.
+- Matched the Live Capture Print and Record Screen controls, tightened the throughput-to-divider spacing, removed report-export controls from live model results, and replaced missing evaluation data's misleading `0.0%` fallback with `Not measured`.
+- Standardized the PCAP uploader to a 56px dropzone with a vertically centered 40px Upload action and equal vertical padding.
+- Reworked the sidebar onto a 28px section rhythm with compact accuracy cards, balanced 13px/16px typography, a heading-aligned teal threshold value, and no floating slider value label.
+- Isolated timed capture into a fixed-height packet-counter fragment plus a separate height-reserved throughput fragment; both update live without collapsing the page or flashing its scrollbar, while heavier model evidence remains stable until Start/Stop transitions.
+- Grouped Deploy and Streamlit's running-status indicator beside the hamburger on Sign In and Sign Up only, without changing the authenticated application toolbar.
+- Fixed the Access card overlap by reserving the identity block's rendered height and a 10px permission-action gap, then normalized native application actions to a shared 40px control height.
+- Added metric-style bordered surfaces to all four dashboard analytics charts, restored natural chart sizing with matched row minimums so Source IP labels remain readable, and restored the borderless compact footer across every application tab.
+- Replaced the filled role identity surface with a centered cyan-outlined Administrator/Viewer pill, keeping the signed-in identity and Role Permissions on neutral surrounding surfaces.
+- Rebuilt the sidebar on an 8px spacing grid with equal 32px section rhythm, 8px model-row gaps, a 24px threshold-to-Logout gap, and shared Access/Logout grid lines.
+- Live and uploaded evidence now enters the autonomy correlation pipeline after immutable model verdicts and consensus triage are persisted.
+
+### Security
+- Shadow mode and host execution disabled are the defaults across local, Docker, Compose, and Render configuration.
+- Autonomous execution requires explicit server policy, validates every IP, protects private sources by default, never invokes a shell, limits active blocks, and records failures without interrupting detection.
+
+### Notes
+- Codename: **Cipher** — the policy-governed autonomy release.
+
 ## [10.0.0] - 2026-07-18
 
 ### Added
@@ -21,7 +64,7 @@ Version numbers follow the milestone scheme documented in [RELEASE.md](RELEASE.m
 
 ### Changed
 - Bumped the package, API, image, feature contract, and documentation to `10.0.0`; Compose now uses the version-neutral `nids-history` volume with an upgrade override.
-- Standardized the current release identity as **Cipher v10.0.0**.
+- Standardized the release identity as **Argus v10.0.0**.
 - Reserved the full product hero for Credits to remove repeated branding from operational views, and refined sidebar, contributor, and authentication layouts for responsive light and dark themes.
 - Replaced Streamlit's vertical-ellipsis menu treatment with an enclosed hamburger symbol and removed the intrusive “Press Enter to submit form” hint.
 - Slowed visible live-dashboard refreshes to a configurable 2.5-second minimum so active capture remains readable without changing packet analysis semantics.
@@ -29,17 +72,18 @@ Version numbers follow the milestone scheme documented in [RELEASE.md](RELEASE.m
 - Replaced decorative emoji controls and verdicts with Material icons and clean `Normal`/`Attack` labels; existing history is normalized automatically on database open.
 - Moved Notifications beside the deployment toolbar, moved Credits beside History, and relocated About inside Credits to remove duplicate navigation.
 - Reserved separate toolbar lanes for Streamlit's running activity indicator, file-change controls, Deploy, Notifications, and the hamburger menu so transient controls never overlap.
-- Restored Streamlit's running-person activity indicator, removed its duplicate header Stop action, and hid duplicate Rerun/Auto rerun entries from the hamburger menu when file-change controls are already presented in the header.
+- Restored Streamlit's running-person activity indicator, removed its duplicate header Stop action, kept Auto rerun available in the hamburger menu, and hid only the duplicated manual Rerun entry.
 - Moved the active Administrator/Viewer/Local Owner badge out of the Credits hero and into the Live Capture title row, aligned directly above Stop Capture.
 - Matched the live role badge to the Stop Capture column width for stable Administrator/Viewer alignment, enlarged the Credits logo, and italicized its supporting product description.
 - Replaced temporary instant role access with mandatory role-first credential forms, and standardized the larger logo/title grid in the About and Access dialogs.
+- Added Data Sciences and Cybersecurity domain pills to contributor cards and condensed each contributor's responsibilities into two focused lines.
 
 ### Security
 - Self-registration is opt-in, creates Viewers only, validates strong passwords, rejects configured-name collisions case-insensitively, and never stores plaintext credentials.
 - Administrator provisioning remains configuration-only; production sign-up is disabled by default.
 
 ### Notes
-- Codename: **Cipher** (Guardian/Security theme) — the capture, control, and verify release.
+- Codename: **Argus** (Guardian/Security theme) — the capture, control, and verify release.
 
 ## [9.0.0] - 2026-07-17
 
@@ -57,7 +101,7 @@ Version numbers follow the milestone scheme documented in [RELEASE.md](RELEASE.m
 - Refined hero and dialog alignment, added GitHub profile images to contributor cards, and made admin/viewer access discoverable through persistent role badges and an in-app permission matrix.
 - Added automatic, non-overriding `.env` loading for local source runs so admin/viewer accounts work without manually exporting environment variables.
 - Added separate light/dark palettes and adaptive dashboard surfaces, then refined the header hierarchy, metric cards, and batch-level consensus summary.
-- Standardized the product name as **Network Intrusion Detection System**, changed
+- Standardized the product name as **Smart Network Intrusion Detection System**, changed
   the active interface codename from Sentinel to **Vigil**, and replaced the
   inline About/Credits sections with accessible modal dialogs and contributor links.
 - Hardened and versioned the container stack: non-root/read-only runtime,

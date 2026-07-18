@@ -25,7 +25,7 @@ _SRC_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if _SRC_DIR not in sys.path:
     sys.path.insert(0, _SRC_DIR)
 
-from nids import storage, __version__  # noqa: E402
+from nids import autonomy, storage, __version__  # noqa: E402
 
 TOKEN_ENV = "NIDS_API_TOKEN"
 
@@ -112,6 +112,26 @@ def route(path, query=None, auth_header=None, db_path=storage.DEFAULT_DB_PATH):
             "min_risk": min_risk,
             "detections": df.to_dict(orient="records"),
         }
+
+    if path == "/api/autonomy/summary":
+        return 200, autonomy.query_summary(db_path=db_path)
+
+    if path == "/api/autonomy/incidents":
+        limit, error = _integer_param(query, "limit", 100, 1, MAX_LIMIT)
+        if error:
+            return 400, error
+        df = autonomy.query_incidents(limit=limit, db_path=db_path)
+        return 200, {"count": len(df), "incidents": df.to_dict(orient="records")}
+
+    if path == "/api/autonomy/actions":
+        limit, error = _integer_param(query, "limit", 100, 1, MAX_LIMIT)
+        if error:
+            return 400, error
+        status = query.get("status", [None])[0]
+        if status and status not in autonomy.ACTION_STATUSES:
+            return 400, {"error": "invalid action status", "got": status}
+        df = autonomy.query_actions(status=status, limit=limit, db_path=db_path)
+        return 200, {"count": len(df), "actions": df.to_dict(orient="records")}
 
     if path.startswith("/api/ip/"):
         # Percent-decode so IPv6 / escaped values resolve to the stored value.

@@ -22,7 +22,7 @@ progress before the per-release scope rule (see "Release cadence") kicked in:
 - [x] `docs/DATASET.md` — NSL-KDD source/citation/column documentation.
 - [x] Tagged `v3.0.0`.
 
-## Release cadence (locked, v4.0.0–v10.0.0)
+## Release cadence (v4.0.0–v11.0.0)
 
 Guardian/Security codename sequence — see RELEASE.md for the full table.
 Each release stays within its scope; CI/infra hardening doesn't count
@@ -36,7 +36,8 @@ against the feature quota below.
 | v7.0.0 | Bastion | 1) Dashboard auth/login — 2) Auto-block suggestion (firewall rule snippet for a flagged IP) |
 | v8.0.0 | **Phalanx** (grand) | 1) Model-retraining CI pipeline — 2) Multi-user roles/permissions — 3) REST API for detections — 4) Encrypted history-db storage option — 5) Extra alert integrations (PagerDuty/Teams) |
 | v9.0.0 | **Vigil** (grand) | Render deployment · mandatory production auth · lockout protection · cloud-aware capture · branded UI · consensus threat triage |
-| v10.0.0 | **Cipher** | Adapter selection · explicit capture scope · role-first authentication · Viewer-only sign-up · professional operations shell |
+| v10.0.0 | **Argus** | Adapter selection · explicit capture scope · role-first authentication · Viewer-only sign-up · professional operations shell |
+| v11.0.0 | **Cipher** | Policy-governed autonomy · correlation · drift signals · approvals · reversible containment · audit trail |
 
 ## v4.0.0 — Citadel (done)
 
@@ -95,7 +96,7 @@ against the feature quota below.
 5. [x] **Brand-customized login screen** — visually customized login UI matching the NIDS color theme.
 6. [x] **Consensus threat triage** — cross-model 0–100 risk scoring, persisted triage queue, and filtered read-only API endpoint.
 
-## v10.0.0 — Cipher (done)
+## v10.0.0 — Argus (done)
 
 1. [x] **Capture-interface selector** — friendly Npcap/Scapy adapter choices with an optional environment default.
 2. [x] **Explicit capture scope** — device visibility plus whole-LAN SPAN/TAP/gateway guidance.
@@ -103,10 +104,17 @@ against the feature quota below.
 4. [x] **Viewer-only self-registration** — opt-in local SQLite store with salted PBKDF2 hashes.
 5. [x] **Professional operations shell** — compact one-screen sidebar, top-bar notifications, Credits/About hierarchy, equal History cards, clean Material controls, stable verdict labels, and a concise footer.
 
-## 🎉 Roadmap complete (v3.0.0 → v10.0.0)
+## v11.0.0 — Cipher (done)
+
+- Shadow, Approval, and Autonomous operating modes
+- Correlated high-confidence incidents and behavior-drift signals
+- Reversible, time-bound containment with server-side execution guardrails
+- Administrator approvals, Viewer-readable evidence, and full audit trail
+
+## Roadmap complete (v3.0.0 → v11.0.0)
 
 The Guardian/Security codename sequence is fully shipped: Watchtower,
-Citadel, Bulwark, Aegis, Bastion, Phalanx, Vigil, Cipher. Future work is now open-ended —
+Citadel, Bulwark, Aegis, Bastion, Phalanx, Vigil, Argus, Cipher. Future work is now open-ended —
 add ideas below as they come up.
 
 ## v9 audit and hardening pass (done)

@@ -17,8 +17,9 @@ def test_current_release_metadata_is_consistent():
     version = match.group(1)
     major = version.split(".", maxsplit=1)[0]
 
-    assert version == "10.0.0"
+    assert version == "11.0.0"
     assert 'RELEASE_CODENAME = "Cipher"' in _read("src/nids/app.py")
+    assert 'PRODUCT_NAME = "Smart Network Intrusion Detection System"' in _read("src/nids/app.py")
     assert f'org.opencontainers.image.version="{version}"' in _read("Dockerfile")
     assert f"image: nids:{version}" in _read("docker-compose.yml")
     assert "name: ${NIDS_HISTORY_VOLUME:-nids-history}" in _read("docker-compose.yml")
@@ -34,6 +35,7 @@ def test_current_release_metadata_is_consistent():
     current_release = _read(f"docs/releases/v{version}.md")
     assert current_release.startswith(f"# ⚡ NIDS v{version}\n")
     assert "> Codename **Cipher**" in current_release
+    assert "> Codename **Argus**" in _read("docs/releases/v10.0.0.md")
     assert "> Codename **Vigil**" in _read("docs/releases/v9.0.0.md")
     assert f"NIDS v{version} uses" in _read("docs/deployment/docker.md")
     assert f'"version":"{version}"' in _read("docs/api/api.md")
@@ -60,5 +62,5 @@ def test_active_configuration_has_no_stale_product_version():
     )
     for relative_path in active_files:
         contents = _read(relative_path)
-        assert "9.0.0" not in contents, f"stale version in {relative_path}"
+        assert "10.0.0" not in contents, f"stale version in {relative_path}"
         assert "nids-history-v9" not in contents, f"stale volume name in {relative_path}"

@@ -63,7 +63,7 @@ def _migrate_schema(conn):
 
     # Earlier builds stored emoji-decorated verdicts. Normalize them in place
     # so history tables, exports, charts, and the API all use the same concise
-    # operator-facing vocabulary as new v10 detections.
+    # operator-facing vocabulary as current detections.
     for column in ("rf_verdict", "dt_verdict", "anomaly_verdict"):
         conn.execute(
             f"UPDATE detections SET {column} = 'Attack' "

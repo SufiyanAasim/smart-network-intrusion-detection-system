@@ -1,6 +1,6 @@
 # Docker and Render deployment
 
-NIDS v10.0.0 uses one hardened image for the Streamlit dashboard and the
+NIDS v11.0.0 uses one hardened image for the Streamlit dashboard and the
 read-only REST API. The default Compose service runs without Linux capabilities;
 raw host capture is isolated behind an explicit Linux-only profile.
 
@@ -19,6 +19,18 @@ python src/nids/auth.py
 
 Paste the generated value into `NIDS_AUTH_PASSWORD_HASH` in `.env`. Do not put
 plaintext passwords or committed secrets in Compose or the image.
+
+Autonomous response remains safe by default in containers:
+
+```env
+NIDS_AUTONOMY_MODE=shadow
+NIDS_AUTONOMY_EXECUTE=false
+```
+
+Only the Linux `capture` profile has the network capabilities that could apply
+a response. Validate Shadow and Approval evidence before enabling execution;
+keep private-source containment disabled unless the deployment is explicitly
+designed and tested for LAN enforcement.
 
 ## Dashboard
 

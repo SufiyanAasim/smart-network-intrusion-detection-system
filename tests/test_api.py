@@ -119,3 +119,25 @@ def test_token_auth_open_when_unset(monkeypatch):
     monkeypatch.delenv(api.TOKEN_ENV, raising=False)
     status, _ = api.route("/health")
     assert status == 200
+
+
+def test_autonomy_read_only_endpoints(tmp_path):
+    db = str(tmp_path / "autonomy-api.db")
+    status, body = api.route("/api/autonomy/summary", db_path=db)
+    assert status == 200
+    assert body == {"incidents": 0, "pending": 0, "active": 0, "simulated": 0}
+
+    status, body = api.route(
+        "/api/autonomy/incidents", {"limit": ["10"]}, db_path=db
+    )
+    assert status == 200 and body == {"count": 0, "incidents": []}
+
+    status, body = api.route(
+        "/api/autonomy/actions", {"status": ["pending"]}, db_path=db
+    )
+    assert status == 200 and body == {"count": 0, "actions": []}
+
+    status, body = api.route(
+        "/api/autonomy/actions", {"status": ["unknown"]}, db_path=db
+    )
+    assert status == 400 and body["error"] == "invalid action status"

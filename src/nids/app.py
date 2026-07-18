@@ -16,7 +16,7 @@ if _SRC_DIR not in sys.path:
 _BASE_DIR = os.path.dirname(_SRC_DIR)
 _LOGO_PATH = os.path.join(_BASE_DIR, "assets", "images", "logo.png")
 _CONTRIBUTOR_IMAGE_DIR = os.path.join(_BASE_DIR, "assets", "images", "contributors")
-PRODUCT_NAME = "Network Intrusion Detection System"
+PRODUCT_NAME = "Smart Network Intrusion Detection System"
 RELEASE_CODENAME = "Cipher"
 
 from dotenv import load_dotenv  # noqa: E402
@@ -39,7 +39,7 @@ import altair as alt  # noqa: E402
 import time  # noqa: E402
 
 from nids.features import MODEL_FEATURES, WINDOW_CONNECTIONS, preprocess_data, packets_to_df  # noqa: E402
-from nids import storage, alerts, anomaly, geo, reporting, throughput, notify, netcheck, auth, firewall, crypto, triage  # noqa: E402
+from nids import storage, alerts, anomaly, geo, reporting, throughput, notify, netcheck, auth, firewall, crypto, triage, autonomy  # noqa: E402
 from nids import __version__ as NIDS_VERSION  # noqa: E402
 
 # Raw packets kept in session_state for live capture, so packets_to_df can
@@ -96,6 +96,7 @@ st.set_page_config(
 st.markdown(
     """
     <style>
+    :root {--nids-control-height:40px;}
     .block-container {max-width:1500px;padding-top:3.25rem;padding-bottom:1.25rem;}
     div[data-testid="stMetric"] {background:rgba(128,128,128,.07);
       border:1px solid rgba(128,128,128,.22);box-sizing:border-box;
@@ -105,6 +106,11 @@ st.markdown(
     div[data-baseweb="tab-list"] {gap:.35rem;
       border-bottom:1px solid rgba(128,128,128,.25);}
     button[data-baseweb="tab"] {border-radius:9px 9px 0 0;padding:.55rem .8rem;}
+    [data-testid="stButton"] button,
+    [data-testid="stDownloadButton"] button,
+    [data-testid="stFormSubmitButton"] button {height:var(--nids-control-height)!important;
+      min-height:var(--nids-control-height)!important;max-height:var(--nids-control-height)!important;
+      display:flex!important;align-items:center!important;justify-content:center!important;}
     div[data-testid="InputInstructions"] {display:none!important;}
     button[data-testid="stMainMenuButton"] {border:1px solid rgba(128,128,128,.35)!important;
       border-radius:9px!important;width:36px!important;height:36px!important;
@@ -113,15 +119,22 @@ st.markdown(
     button[data-testid="stMainMenuButton"]::before {content:"";display:block;width:16px;height:2px;
       background:currentColor;box-shadow:0 -5px 0 currentColor,0 5px 0 currentColor;}
     [data-testid="stToolbar"] {gap:0.4rem!important;}
-    /* File-change Rerun/Always rerun controls already live in the header.
-       Remove their duplicate menu entries while keeping theme, cache and
-       operator utilities available in the hamburger menu. */
-    [data-testid="stThemeSwitcher"] + [data-testid="stMainMenuDivider"],
-    [data-testid="stMainMenuItem-rerun"],
-    [data-testid="stMainMenuItem-autoRerun"] {display:none!important;}
+    /* Manual Rerun is already surfaced by Streamlit's file-change header.
+       Keep Auto rerun available in the hamburger menu as an explicit
+       development preference. */
+    [data-testid="stMainMenuItem-rerun"] {display:none!important;}
+    [data-testid="stMainMenuItem-print"],
+    [data-testid="stMainMenuItem-recordScreen"],
+    [data-testid="stMainMenuItem-recordScreencast"] {display:none!important;}
+    body:has(.nids-auth-shell) [data-testid="stMainMenuItem-autoRerun"] {display:none!important;}
     [data-testid="stAppDeployButton"] {transform:translateX(-9.1rem);}
     [data-testid="stStatusWidget"] {transform:translateX(-9.5rem);height:36px!important;
       display:flex!important;align-items:center!important;}
+    /* Authentication has no notification action competing for header space.
+       Keep Deploy and the native running indicator in their normal toolbar
+       flow beside the hamburger; authenticated screens retain the app layout. */
+    body:has(.nids-auth-shell) [data-testid="stAppDeployButton"],
+    body:has(.nids-auth-shell) [data-testid="stStatusWidget"] {transform:none!important;}
     /* During capture/reruns the native running-person status is useful, but
        its header Stop action duplicates the explicit Stop Capture control. */
     [data-testid="stStatusWidgetRunningIcon"] {display:flex!important;align-items:center!important;}
@@ -130,59 +143,169 @@ st.markdown(
       max-height:36px!important;display:flex!important;align-items:center!important;
       border:1px solid rgba(128,128,128,.35)!important;border-radius:9px!important;
       padding:0 .75rem!important;}
-    [data-testid="stSidebar"] {width:282px!important;}
-    [data-testid="stSidebar"] .block-container {padding:1rem .9rem .65rem!important;}
-    [data-testid="stSidebar"] [data-testid="stVerticalBlock"] {gap:.48rem!important;}
-    [data-testid="stSidebar"] hr {margin:.25rem 0!important;}
-    .nids-sidebar-brand {text-align:center;margin:-.1rem 0 .35rem;}
-    .nids-sidebar-brand img {width:66px;height:66px;object-fit:contain;}
-    .nids-sidebar-brand strong {display:block;margin-top:-.2rem;font-size:.82rem;
+    [data-testid="stSidebar"] {width:300px!important;}
+    [data-testid="stSidebar"] .block-container {padding:.65rem 1rem 1rem!important;}
+    [data-testid="stSidebar"] .block-container > [data-testid="stVerticalBlock"] {
+      min-height:calc(100vh - 2.65rem);}
+    [data-testid="stSidebar"] [data-testid="stVerticalBlock"] {gap:.5rem!important;}
+    [data-testid="stSidebar"] .block-container > [data-testid="stVerticalBlock"] {
+      gap:0!important;}
+    [data-testid="stSidebar"] hr {margin:.45rem 0!important;}
+    [data-testid="stSidebar"] button {height:var(--nids-control-height)!important;
+      min-height:var(--nids-control-height)!important;max-height:var(--nids-control-height)!important;}
+    .nids-sidebar-brand {text-align:center;margin:0 0 1rem;}
+    .nids-sidebar-brand img {width:72px;height:72px;object-fit:contain;}
+    .nids-sidebar-brand strong {display:block;margin-top:-.05rem;font-size:.82rem;
       letter-spacing:.14em;text-transform:uppercase;opacity:.88;}
-    .nids-sidebar-heading {font-size:.74rem;font-weight:800;letter-spacing:.1em;
-      text-transform:uppercase;opacity:.64;margin:.35rem 0 .05rem;}
-    .nids-accuracy-list {display:grid;gap:.35rem;}
+    .nids-sidebar-heading {font-size:.7rem;font-weight:750;letter-spacing:.1em;
+      line-height:1.2;text-transform:uppercase;opacity:.68;margin:0 0 .75rem;}
+    .nids-sidebar-heading-row {display:flex;align-items:center;justify-content:space-between;
+      gap:.75rem;margin:0 0 .75rem;}
+    .nids-sidebar-heading-row .nids-sidebar-heading {margin:0;}
+    .nids-threshold-value {color:var(--primary-color,#0891b2);font-size:.8rem;font-weight:750;
+      font-variant-numeric:tabular-nums;}
+    .st-key-sidebar_models_section,
+    .st-key-sidebar_threshold_section {margin-top:1.25rem!important;}
+    .st-key-sidebar_access_section [data-testid="stVerticalBlock"] {gap:0!important;}
+    .st-key-sidebar_models_section [data-testid="stVerticalBlock"] {gap:0!important;}
+    .st-key-sidebar_threshold_section [data-testid="stVerticalBlock"] {gap:.25rem!important;}
+    .st-key-sidebar_access_group {border:1px solid rgba(128,128,128,.28);
+      border-radius:14px;padding:.25rem .38rem .38rem;
+      background:rgba(128,128,128,.045);}
+    .st-key-sidebar_access_group [data-testid="stVerticalBlock"] {gap:0!important;}
+    .st-key-sidebar_access_group .nids-role-card {border:0;background:transparent;
+      color:inherit;border-radius:9px;padding:.3rem .3rem .4rem;margin:0;
+      min-height:54px;box-sizing:border-box;}
+    .st-key-sidebar_access_group .nids-role-badge {height:32px;display:flex;
+      align-items:center;justify-content:center;width:100%;box-sizing:border-box;
+      border:1px solid #0e7490;border-radius:999px;color:var(--primary-color,#22d3ee);
+      background:transparent;font-size:.68rem;font-weight:800;letter-spacing:.09em;
+      line-height:1;text-transform:uppercase;opacity:1;}
+    .st-key-sidebar_access_group .nids-role-session {display:block;margin:.38rem .25rem 0;
+      font-size:.76rem;line-height:1.2;opacity:.68;}
+    .st-key-sidebar_access_group [data-testid="stElementContainer"]:has(.nids-role-card) {
+      min-height:54px!important;margin-bottom:.625rem!important;overflow:visible!important;}
+    .st-key-sidebar_access_group button {background:rgba(128,128,128,.035);}
+    .st-key-sidebar_logout {margin-top:auto!important;padding-top:1.85rem;
+      border-top:1px solid rgba(128,128,128,.2);}
+    .st-key-sidebar_logout button {border-color:rgba(239,85,59,.38)!important;}
+    .nids-model-state {display:flex;align-items:center;gap:.38rem;margin:0 0 .625rem;
+      font-size:.72rem;opacity:.7;}
+    .nids-model-state::before {content:"";width:7px;height:7px;border-radius:50%;
+      background:#00CC96;box-shadow:0 0 0 3px rgba(0,204,150,.12);}
+    .nids-accuracy-list {display:grid;gap:.625rem;}
     .nids-accuracy-row {display:flex;align-items:center;justify-content:space-between;
       gap:.75rem;border:1px solid rgba(128,128,128,.22);border-radius:10px;
-      background:rgba(128,128,128,.055);padding:.5rem .65rem;}
-    .nids-accuracy-row span {font-size:.78rem;opacity:.78;}
-    .nids-accuracy-row strong {font-size:.96rem;font-variant-numeric:tabular-nums;}
+      background:rgba(128,128,128,.055);padding:.5rem .75rem;min-height:42px;
+      box-sizing:border-box;}
+    .nids-accuracy-row span {font-size:.82rem;opacity:.82;}
+    .nids-accuracy-row strong {font-size:1rem;font-weight:650;font-variant-numeric:tabular-nums;}
+    .st-key-sidebar_threshold_section [data-testid="stThumbValue"] {display:none!important;}
     .st-key-top_notifications {position:fixed;right:3.65rem;top:0.75rem;width:auto!important;
       z-index:999990;margin:0!important;}
     .st-key-top_notifications button {height:36px!important;min-height:36px!important;max-height:36px!important;
       border:1px solid rgba(128,128,128,.35)!important;border-radius:9px!important;font-weight:600;
       padding:0 .75rem!important;display:flex!important;align-items:center!important;line-height:1!important;}
     .nids-hero {border:1px solid rgba(128,128,128,.25);
-      border-radius:16px;padding:15px 20px;
+      border-radius:16px;padding:10px 16px;
       background:linear-gradient(135deg,rgba(128,128,128,.075),rgba(34,211,238,.025));
-      box-shadow:0 12px 35px rgba(0,0,0,.09);margin-bottom:.7rem;}
-    .nids-hero-logo {width:108px;height:108px;object-fit:contain;
+      box-shadow:0 12px 35px rgba(0,0,0,.09);margin-bottom:.45rem;}
+    .nids-hero-logo {width:92px;height:92px;object-fit:contain;
       flex:0 0 auto;margin-left:clamp(.2rem,.7vw,.65rem);}
     .nids-hero-content {min-width:0;flex:1;}
     .nids-kicker {font-size:.76rem;font-weight:700;letter-spacing:.16em;
       text-transform:uppercase;margin-bottom:.2rem;}
     .nids-hero h1 {font-size:clamp(1.7rem,2.45vw,2.45rem);line-height:1.12;}
     .nids-subtitle {opacity:.68;font-size:.92rem;font-style:italic;}
-    .nids-role-chip {align-self:flex-start;border:1px solid rgba(34,211,238,.42);
-      border-radius:999px;padding:.35rem .65rem;color:#22d3ee;
-      background:rgba(34,211,238,.08);font-size:.7rem;font-weight:800;
-      letter-spacing:.08em;white-space:nowrap;}
-    .nids-live-role {width:100%;min-height:2.6rem;display:flex;align-items:center;
-      justify-content:center;}
-    .nids-live-role .nids-role-chip {display:inline-flex;align-items:center;
-      justify-content:center;align-self:center;width:100%;box-sizing:border-box;
-      min-height:34px;text-align:center;}
+    .st-key-live_record_control {min-height:2.6rem;display:flex;align-items:center;
+      justify-content:stretch;}
+    .st-key-live_record_control > div {width:100%;}
+    .st-key-live_record_control iframe {display:block;margin:0!important;
+      height:42px!important;}
+    .st-key-live_print_control {min-height:2.6rem;display:flex;align-items:center;}
+    .st-key-live_print_control > div {width:100%;}
+    .st-key-live_print_control button {height:40px!important;min-height:40px!important;}
+    .st-key-live_throughput_panel {min-height:230px!important;}
+    .st-key-live_throughput_panel > div > [data-testid="stVerticalBlock"] {
+      min-height:230px!important;}
+    .st-key-live_results_panel hr {margin:.25rem 0 1rem!important;}
+    .st-key-dashboard_export_control {min-height:2.6rem;display:flex;align-items:center;}
+    .st-key-dashboard_export_control > div {width:100%;}
+    .st-key-dashboard_export_control button {height:40px!important;min-height:40px!important;
+      border:1px solid #0e7490!important;border-radius:8px!important;
+      background:#0e7490!important;color:#fff!important;font-weight:600!important;}
+    .st-key-dashboard_export_control button:hover {border-color:#155e75!important;
+      background:#155e75!important;color:#fff!important;}
+    .st-key-dashboard_chart_grid > div > [data-testid="stVerticalBlock"] {gap:1rem!important;}
+    .st-key-dashboard_chart_grid [data-testid="stHorizontalBlock"] {gap:1rem!important;
+      align-items:stretch!important;}
+    .st-key-dashboard_triage_card [data-testid="stVerticalBlockBorderWrapper"],
+    .st-key-dashboard_model_card [data-testid="stVerticalBlockBorderWrapper"],
+    .st-key-dashboard_risk_card [data-testid="stVerticalBlockBorderWrapper"],
+    .st-key-dashboard_sources_card [data-testid="stVerticalBlockBorderWrapper"] {
+      box-sizing:border-box;border:1px solid rgba(128,128,128,.22)!important;
+      border-radius:12px!important;background:rgba(128,128,128,.07)!important;
+      padding:.45rem .7rem!important;}
+    .st-key-dashboard_triage_card [data-testid="stVerticalBlockBorderWrapper"],
+    .st-key-dashboard_model_card [data-testid="stVerticalBlockBorderWrapper"] {
+      min-height:220px;}
+    .st-key-dashboard_risk_card [data-testid="stVerticalBlockBorderWrapper"],
+    .st-key-dashboard_sources_card [data-testid="stVerticalBlockBorderWrapper"] {
+      min-height:230px;}
+    .st-key-dashboard_triage_card [data-testid="stVerticalBlock"],
+    .st-key-dashboard_model_card [data-testid="stVerticalBlock"],
+    .st-key-dashboard_risk_card [data-testid="stVerticalBlock"],
+    .st-key-dashboard_sources_card [data-testid="stVerticalBlock"] {gap:0!important;}
+    [data-testid="stFileUploaderDropzone"] {min-height:56px!important;
+      padding:.5rem .75rem!important;box-sizing:border-box!important;
+      align-items:center!important;}
+    [data-testid="stFileUploaderDropzone"] button {height:40px!important;
+      min-height:40px!important;max-height:40px!important;display:flex!important;
+      align-items:center!important;justify-content:center!important;}
+    [data-testid="stFileUploaderDropzoneInstructions"] {align-self:center!important;}
     .nids-dialog-brand {display:grid;grid-template-columns:88px auto;align-items:center;
       column-gap:1.25rem;width:fit-content;
-      margin:.45rem 0 1.25rem clamp(3rem,8vw,7rem);}
+      margin:.45rem 0 1.25rem 0;}
     .nids-dialog-brand img {width:88px;height:88px;object-fit:contain;
       justify-self:center;}
     .nids-dialog-title {font-size:1.05rem;font-weight:750;line-height:1.25;}
     .nids-dialog-meta {opacity:.65;font-size:.86rem;margin-top:.35rem;}
-    .nids-avatar {width:72px;height:72px;border-radius:50%;object-fit:cover;
+    .nids-avatar {width:64px;height:64px;border-radius:50%;object-fit:cover;
       border:2px solid rgba(34,211,238,.7);padding:2px;
       background:rgba(128,128,128,.12);}
+    .nids-credits-title {font-size:1.3rem;font-weight:800;line-height:1.2;
+      margin:.4rem 0 .4rem;}
+    .nids-contributors-grid {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
+      gap:1rem;}
+    .nids-contributor-card {border:1px solid rgba(128,128,128,.28);border-radius:12px;
+      padding:.65rem .8rem;display:flex;flex-direction:column;min-height:194px;
+      box-sizing:border-box;background:rgba(128,128,128,.025);}
+    .nids-contributor-head {display:grid;grid-template-columns:64px minmax(0,1fr);
+      align-items:center;gap:.75rem;}
+    .nids-contributor-identity {display:flex;flex-direction:column;align-items:flex-start;
+      gap:.28rem;padding:0;min-width:0;}
+    .nids-contributor-name {font-size:1.05rem;font-weight:800;line-height:1.2;}
+    .nids-contributor-domain {display:inline-flex;align-items:center;justify-content:center;
+      border:1px solid rgba(34,211,238,.42);border-radius:999px;
+      padding:.25rem .55rem;color:#22d3ee;background:rgba(34,211,238,.08);
+      font-size:.66rem;font-weight:800;letter-spacing:.08em;white-space:nowrap;}
+    .nids-contributor-identity a {font-size:.88rem;}
+    .nids-contributor-responsibilities {font-size:.78rem;line-height:1.3;
+      margin:.42rem 0 .5rem;flex:1;}
+    .nids-contributor-responsibilities strong {display:block;margin-bottom:.18rem;}
+    .nids-contributor-responsibilities ul {margin:0;padding-left:1.15rem;}
+    .nids-contributor-responsibilities li {margin:.08rem 0;}
+    .nids-github-action {height:34px;border:1px solid rgba(128,128,128,.38);
+      border-radius:8px;display:flex;align-items:center;justify-content:center;
+      color:inherit!important;text-decoration:none!important;font-size:.82rem;font-weight:700;}
+    .nids-github-action:hover {border-color:#22d3ee;color:#0891b2!important;}
+    .nids-credits-scope {margin:.42rem 0 .12rem;padding:.46rem .7rem;
+      border-left:3px solid rgba(34,211,238,.7);background:rgba(128,128,128,.045);
+      border-radius:0 8px 8px 0;font-size:.76rem;line-height:1.32;}
+    .st-key-credits_footer_actions {margin-top:0!important;}
+    .st-key-credits_footer_actions [data-testid="stVerticalBlock"] {gap:.25rem!important;}
     .nids-role-card {border:1px solid rgba(128,128,128,.28);border-radius:14px;
-      padding:.75rem .9rem;margin:.2rem 0 .65rem;
+      padding:.85rem 1rem;margin:.1rem 0 .28rem;
       background:rgba(128,128,128,.07);}
     .nids-role-card strong {display:block;font-size:.92rem;}
     .nids-role-card span {opacity:.7;font-size:.78rem;}
@@ -192,11 +315,13 @@ st.markdown(
     .nids-auth-logo {width:112px;height:112px;object-fit:contain;}
     .nids-auth-title {font-size:1.65rem;font-weight:800;margin:.15rem 0 .15rem;}
     .nids-auth-meta {opacity:.7;margin-bottom:.4rem;}
+    .st-key-auth_primary_nav {margin-top:.75rem!important;}
+    .st-key-auth_primary_nav [data-testid="stVerticalBlock"] {gap:0!important;}
     .nids-auth-role-help {text-align:center;opacity:.68;font-size:.8rem;margin:-.2rem 0 .65rem;}
     [data-testid="stMainBlockContainer"] > [data-testid="stVerticalBlock"] {
       min-height:calc(100vh - 4.5rem);}
     [data-testid="stElementContainer"]:has(.nids-footer) {margin-top:auto;}
-    .nids-footer {border-top:1px solid rgba(128,128,128,.22);margin-top:2rem;padding:1rem .2rem;
+    .nids-footer {border-top:0;margin-top:.45rem;padding:.45rem .2rem;
       display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap;opacity:.72;font-size:.8rem;}
     .nids-footer a {color:inherit;text-decoration:none;font-weight:700;}
     @media print {
@@ -208,16 +333,28 @@ st.markdown(
       [data-testid="stMainBlockContainer"] > [data-testid="stVerticalBlock"] {min-height:auto!important;}
       .nids-hero {box-shadow:none!important;break-inside:avoid;}
     }
+    @media (min-height:750px) {
+      .nids-hero {padding:14px 20px;margin-bottom:.8rem;}
+      .nids-hero-logo {width:100px;height:100px;}
+      .nids-credits-title {margin:.75rem 0 .6rem;}
+      .nids-contributor-card {padding:.9rem 1rem;min-height:225px;}
+      .nids-contributor-responsibilities {line-height:1.42;margin:.68rem 0 .72rem;}
+      .nids-contributor-responsibilities strong {margin-bottom:.3rem;}
+      .nids-contributor-responsibilities li {margin:.16rem 0;}
+      .nids-credits-scope {margin:.72rem 0 .3rem;padding:.6rem .8rem;line-height:1.42;}
+      .st-key-credits_footer_actions {margin-top:.3rem!important;}
+      .nids-footer {margin-top:1.1rem;padding:.8rem .2rem;}
+    }
     @media (max-width:700px) {
       .nids-dialog-brand {grid-template-columns:76px auto;column-gap:.8rem;
-        margin-left:.75rem;}
+        margin-left:0;}
       .nids-dialog-brand img {width:76px;height:76px;}
       .nids-hero {padding:16px 14px!important;gap:12px!important;}
-      .nids-hero-logo {width:94px;height:94px;margin-left:0;}
-      .nids-live-role .nids-role-chip {font-size:.62rem;padding:.3rem .5rem;}
+      .nids-hero-logo {width:86px;height:86px;margin-left:0;}
       .nids-auth-shell {padding:1rem .8rem;margin-top:.75rem;}
       .nids-auth-logo {width:108px;height:108px;}
       .st-key-top_notifications {right:3.65rem;}
+      .nids-contributors-grid {grid-template-columns:1fr;}
     }
     </style>
     """,
@@ -276,95 +413,95 @@ def show_about_dialog():
         optional Isolation Forest analysis on the same live or uploaded
         traffic, then adds consensus risk triage and persistent evidence.
 
-        It is an operator-support Network Intrusion Detection System, not a
+        Cipher's policy-governed autonomy layer correlates high-confidence
+        evidence, supports reviewed approvals, and can apply time-bound,
+        reversible containment only inside explicit server guardrails.
+
+        It is an operator-support Smart Network Intrusion Detection System, not a
         replacement for a production IDS. Full documentation lives in `docs/`.
         """
     )
-
-
-def render_credits():
-    """Render contributor ownership and project credits as a first-class view."""
-    st.markdown("### Contributors")
-    sufiyan, taha = st.columns(2)
-    with sufiyan:
-        with st.container(border=True):
-            avatar, identity = st.columns([1, 4], vertical_alignment="center")
-            with avatar:
-                st.markdown(
-                    '<a href="https://github.com/SufiyanAasim" target="_blank" '
-                    'aria-label="Open SufiyanAasim on GitHub">'
-                    f'<img class="nids-avatar" src="data:image/png;base64,{_sufiyan_avatar_b64}" '
-                    'alt="SufiyanAasim GitHub profile picture"/></a>',
-                    unsafe_allow_html=True,
-                )
-            with identity:
-                st.markdown("#### SufiyanAasim")
-                st.markdown("[sufiyanaasim@outlook.com](mailto:sufiyanaasim@outlook.com)")
-            st.markdown(
-                "**Responsibilities**\n\n"
-                "- Data Science and AI/ML\n"
-                "- Models, consensus triage, dashboard, storage, and REST API\n"
-                "- MLOps, builds, CI/CD, testing, and software quality engineering"
-            )
-            st.link_button(
-                "GitHub · @SufiyanAasim",
-                "https://github.com/SufiyanAasim",
-                icon=":material/open_in_new:",
-                width="stretch",
-            )
-    with taha:
-        with st.container(border=True):
-            avatar, identity = st.columns([1, 4], vertical_alignment="center")
-            with avatar:
-                st.markdown(
-                    '<a href="https://github.com/13eeCoder" target="_blank" '
-                    'aria-label="Open 13eeCoder on GitHub">'
-                    f'<img class="nids-avatar" src="data:image/png;base64,{_taha_avatar_b64}" '
-                    'alt="13eeCoder GitHub profile picture"/></a>',
-                    unsafe_allow_html=True,
-                )
-            with identity:
-                st.markdown("#### 13eeCoder")
-                st.markdown("[tahasiddiqui2100@gmail.com](mailto:tahasiddiqui2100@gmail.com)")
-            st.markdown(
-                "**Responsibilities**\n\n"
-                "- Networking and cybersecurity\n"
-                "- Packet capture, traffic analysis, and feature engineering\n"
-                "- Npcap/libpcap readiness, alerts, cryptography, and response controls"
-            )
-            st.link_button(
-                "GitHub · @13eeCoder",
-                "https://github.com/13eeCoder",
-                icon=":material/open_in_new:",
-                width="stretch",
-            )
-
-    st.markdown("### Dataset and scope")
-    st.markdown(
-        "Models are trained on **NSL-KDD**, a cleaned revision of KDD Cup 1999. "
-        "See the [Canadian Institute for Cybersecurity dataset page]"
-        "(https://www.unb.ca/cic/datasets/nsl.html) and `docs/DATASET.md` for "
-        "the citation and column reference. Live verdicts are operator-support "
-        "evidence, not a replacement for a production IDS."
-    )
-
     st.markdown("### Built with")
     st.caption(
         "Streamlit · scikit-learn · Scapy · pandas · Altair · SQLite · "
         "reportlab · cryptography"
     )
-    st.markdown("---")
-    col_btn, col_lic = st.columns([1, 4], vertical_alignment="center")
-    with col_btn:
-        if st.button(
-            "About this project",
-            icon=":material/info:",
-            key="credits_about_project",
-            width="stretch",
-        ):
-            show_about_dialog()
-    with col_lic:
-        st.caption("MIT Licence · © 2026 NIDS Contributors · Network Intrusion Detection System")
+
+
+def render_credits():
+    """Render contributor ownership and project credits as a first-class view."""
+    st.markdown(
+        f"""
+        <div class="nids-credits-title">Contributors</div>
+        <div class="nids-contributors-grid">
+          <section class="nids-contributor-card">
+            <div class="nids-contributor-head">
+              <a href="https://github.com/SufiyanAasim" target="_blank"
+                aria-label="Open SufiyanAasim on GitHub">
+                <img class="nids-avatar" src="data:image/png;base64,{_sufiyan_avatar_b64}"
+                  alt="SufiyanAasim GitHub profile picture"/>
+              </a>
+              <div class="nids-contributor-identity">
+                <div class="nids-contributor-name">SufiyanAasim</div>
+                <span class="nids-contributor-domain">DATA SCIENCES</span>
+                <a href="mailto:sufiyanaasim@outlook.com">sufiyanaasim@outlook.com</a>
+              </div>
+            </div>
+            <div class="nids-contributor-responsibilities">
+              <strong>Responsibilities</strong>
+              <ul>
+                <li>AI/ML Ops, models, triage, dashboard, storage, and REST API</li>
+                <li>Builds, CI/CD, testing, and software quality</li>
+              </ul>
+            </div>
+            <a class="nids-github-action" href="https://github.com/SufiyanAasim"
+              target="_blank">GitHub · @SufiyanAasim</a>
+          </section>
+          <section class="nids-contributor-card">
+            <div class="nids-contributor-head">
+              <a href="https://github.com/13eeCoder" target="_blank"
+                aria-label="Open 13eeCoder on GitHub">
+                <img class="nids-avatar" src="data:image/png;base64,{_taha_avatar_b64}"
+                  alt="13eeCoder GitHub profile picture"/>
+              </a>
+              <div class="nids-contributor-identity">
+                <div class="nids-contributor-name">13eeCoder</div>
+                <span class="nids-contributor-domain">CYBERSECURITY</span>
+                <a href="mailto:tahasiddiqui2100@gmail.com">tahasiddiqui2100@gmail.com</a>
+              </div>
+            </div>
+            <div class="nids-contributor-responsibilities">
+              <strong>Responsibilities</strong>
+              <ul>
+                <li>Networking, capture, traffic analysis, and feature engineering</li>
+                <li>Npcap/libpcap, alerts, cryptography, and response controls</li>
+              </ul>
+            </div>
+            <a class="nids-github-action" href="https://github.com/13eeCoder"
+              target="_blank">GitHub · @13eeCoder</a>
+          </section>
+        </div>
+        <div class="nids-credits-scope"><strong>Dataset and scope · </strong>
+          Models are trained on <strong>NSL-KDD</strong>, a cleaned revision of KDD Cup 1999.
+          See the <a href="https://www.unb.ca/cic/datasets/nsl.html" target="_blank">dataset page</a>
+          and <code>docs/DATASET.md</code>. Live verdicts are operator-support evidence,
+          not a replacement for a production IDS.
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+    with st.container(key="credits_footer_actions"):
+        col_btn, col_lic = st.columns([1, 4], vertical_alignment="center")
+        with col_btn:
+            if st.button(
+                "About This Project",
+                icon=":material/info:",
+                key="credits_about_project",
+                width="stretch",
+            ):
+                show_about_dialog()
+        with col_lic:
+            st.caption("MIT Licence · © 2026 NIDS Contributors · Smart Network Intrusion Detection System")
 
 
 def _require_login():
@@ -399,15 +536,16 @@ def _require_login():
 
     if "auth_screen" not in st.session_state:
         st.session_state.auth_screen = "signin"
-    nav_signin, nav_signup = st.columns(2)
-    if nav_signin.button("Sign in", icon=":material/login:", width="stretch", type="primary" if st.session_state.auth_screen == "signin" else "secondary"):
-        st.session_state.auth_screen = "signin"
-        st.rerun()
-    signup_available = auth.signup_enabled()
-    if nav_signup.button("Create account", icon=":material/person_add:", width="stretch", disabled=not signup_available,
-                         type="primary" if st.session_state.auth_screen == "signup" else "secondary"):
-        st.session_state.auth_screen = "signup"
-        st.rerun()
+    with st.container(key="auth_primary_nav"):
+        nav_signin, nav_signup = st.columns(2)
+        if nav_signin.button("Sign In", icon=":material/login:", width="stretch", type="primary" if st.session_state.auth_screen == "signin" else "secondary"):
+            st.session_state.auth_screen = "signin"
+            st.rerun()
+        signup_available = auth.signup_enabled()
+        if nav_signup.button("Create Account", icon=":material/person_add:", width="stretch", disabled=not signup_available,
+                             type="primary" if st.session_state.auth_screen == "signup" else "secondary"):
+            st.session_state.auth_screen = "signup"
+            st.rerun()
 
     notice = st.session_state.pop("auth_notice", None)
     if notice:
@@ -420,7 +558,7 @@ def _require_login():
             new_username = st.text_input("Choose a username", autocomplete="username")
             new_password = st.text_input("Choose a password", type="password", autocomplete="new-password")
             confirm_password = st.text_input("Confirm password", type="password", autocomplete="new-password")
-            signup_submitted = st.form_submit_button("Create Viewer account", width="stretch", type="primary")
+            signup_submitted = st.form_submit_button("Create Viewer Account", width="stretch", type="primary")
         if signup_submitted:
             if new_password != confirm_password:
                 st.error("Passwords do not match.")
@@ -483,7 +621,7 @@ def _require_login():
                     autocomplete="current-password"
                 )
                 submitted = st.form_submit_button(
-                    f"Sign in as {selected_label}", width="stretch", type="primary"
+                    f"Sign In as {selected_label}", width="stretch", type="primary"
                 )
         else:
             st.info("Select Administrator or Viewer to open the matching sign-in form.")
@@ -536,6 +674,24 @@ def _access_identity():
     if role == auth.ROLE_ADMIN:
         return "Administrator", "Monitor, investigate, export, and back up evidence"
     return "Viewer", "Monitor and investigate · protected exports are read-only"
+
+
+def _autonomy_mode():
+    """Return the session mode, seeded from immutable server policy."""
+    default_mode = autonomy.policy_from_env().mode
+    mode = st.session_state.get("autonomy_mode", default_mode)
+    return mode if mode in autonomy.MODES else autonomy.MODE_SHADOW
+
+
+def _autonomy_actor():
+    return st.session_state.get("user_name") or "local-owner"
+
+
+# TTL rollback is a control-plane duty, not a page-view side effect. Run it on
+# every authenticated app tick when execution is enabled; the operation is
+# idempotent and only touches active actions whose expiry has passed.
+if autonomy.policy_from_env().execution_enabled:
+    autonomy.expire_actions()
 
 
 @st.dialog("Access and permissions", width="large")
@@ -602,7 +758,7 @@ def render_product_hero():
         f"""<div class="nids-hero" style="display:flex;align-items:center;gap:20px">
         {hero_logo}<div class="nids-hero-content">
         <h1 style="margin:.15rem 0 .35rem">{PRODUCT_NAME}</h1>
-        <div class="nids-subtitle">Three-model analysis with consensus risk triage, persistent history and operator-ready evidence.</div></div></div>""",
+        <div class="nids-subtitle">Policy-governed autonomous defense with three-model evidence, reversible containment and a complete audit trail.</div></div></div>""",
         unsafe_allow_html=True,
     )
 
@@ -646,7 +802,7 @@ def load_resources():
             encoders[col] = le
 
         test_path = get_data_path('KDDTest+.txt')
-        rf_acc, dt_acc, iforest_acc = 0.0, 0.0, 0.0
+        rf_acc, dt_acc, iforest_acc = None, None, None
         if os.path.exists(test_path):
             test_df = pd.read_csv(test_path, names=columns)
             X_test = test_df[MODEL_FEATURES].copy()
@@ -683,64 +839,85 @@ rf_model, dt_model, iforest_model, encoders, rf_acc, dt_acc, iforest_acc = load_
 if _logo_b64:
     st.sidebar.markdown(
         f'<div class="nids-sidebar-brand"><img src="data:image/png;base64,{_logo_b64}" '
-        'alt="NIDS logo"/><strong>NIDS</strong></div>',
+        'alt="Smart NIDS logo"/><strong>SMART NIDS</strong></div>',
         unsafe_allow_html=True,
     )
 
-# Access identity and role controls stay visible so the admin/viewer feature
-# is discoverable instead of appearing only as a disabled export caption.
-st.sidebar.markdown('<div class="nids-sidebar-heading">Access</div>', unsafe_allow_html=True)
 role_name, role_summary = _access_identity()
 signed_in = st.session_state.get("user_name")
 identity_line = f"Signed in as {signed_in}" if signed_in else role_summary
-st.sidebar.markdown(
-    f'<div class="nids-role-card"><strong>{html.escape(role_name)}</strong>'
-    f'<span>{html.escape(identity_line)}</span></div>',
-    unsafe_allow_html=True,
-)
-if st.sidebar.button("Role permissions", icon=":material/badge:", width="stretch"):
-    show_access_dialog()
-if auth.is_auth_configured() and st.session_state.get("authenticated"):
-    if st.sidebar.button("Log out", icon=":material/logout:", width="stretch"):
-        for k in (
-            "authenticated", "user_role", "user_name", "selected_login_role",
-            "login_username",
-        ):
-            st.session_state.pop(k, None)
-        st.rerun()
+with st.sidebar.container(key="sidebar_access_section"):
+    st.markdown('<div class="nids-sidebar-heading">Access</div>', unsafe_allow_html=True)
+    with st.container(key="sidebar_access_group"):
+        st.markdown(
+            f'<div class="nids-role-card"><span class="nids-role-badge">'
+            f'{html.escape(role_name)}</span><span class="nids-role-session">'
+            f'{html.escape(identity_line)}</span></div>',
+            unsafe_allow_html=True,
+        )
+        if st.button("Role Permissions", icon=":material/badge:", width="stretch"):
+            show_access_dialog()
 
 # Compact accuracy rows preserve the sidebar's information without turning each
 # value into a full dashboard card.
+def _accuracy_label(value):
+    return f"{value * 100:.1f}%" if value is not None else "Not measured"
+
+
 accuracy_rows = [
-    ("Random Forest", f"{rf_acc * 100:.1f}%"),
-    ("Decision Tree", f"{dt_acc * 100:.1f}%"),
+    ("Random Forest", _accuracy_label(rf_acc)),
+    ("Decision Tree", _accuracy_label(dt_acc)),
 ]
 if iforest_model is not None:
-    accuracy_rows.append(("Isolation Forest", f"{iforest_acc * 100:.1f}%"))
+    accuracy_rows.append(("Isolation Forest", _accuracy_label(iforest_acc)))
 accuracy_markup = "".join(
     f'<div class="nids-accuracy-row"><span>{html.escape(label)}</span><strong>{value}</strong></div>'
     for label, value in accuracy_rows
 )
-st.sidebar.markdown(
-    '<div class="nids-sidebar-heading">Model accuracy</div>'
-    f'<div class="nids-accuracy-list">{accuracy_markup}</div>',
-    unsafe_allow_html=True,
-)
-if iforest_model is None:
-    st.sidebar.caption("Isolation Forest is not installed.")
+with st.sidebar.container(key="sidebar_models_section"):
+    st.markdown(
+        '<div class="nids-sidebar-heading">Model accuracy</div>'
+        '<div class="nids-model-state">All available models active · informational</div>'
+        f'<div class="nids-accuracy-list">{accuracy_markup}</div>',
+        unsafe_allow_html=True,
+    )
+    if iforest_model is None:
+        st.caption("Isolation Forest is not installed.")
 
 # Explanations are rendered as always-visible captions rather than Streamlit
 # `help=` tooltips: the "?" tooltip could stay stuck on screen after the
 # pointer left it, overlapping the controls below. A caption can't get stuck,
 # and the guidance is readable without hunting for a hover target.
-st.sidebar.markdown('<div class="nids-sidebar-heading">Threat threshold</div>', unsafe_allow_html=True)
-critical_threshold_pct = st.sidebar.slider(
-    "Critical threshold",
-    min_value=5, max_value=100, value=DEFAULT_CRITICAL_THRESHOLD_PCT, step=5,
-)
-st.sidebar.caption(
-    f"Critical at **{critical_threshold_pct}%** attack traffic; lower non-zero values are suspicious."
-)
+with st.sidebar.container(key="sidebar_threshold_section"):
+    threshold_widget_key = "critical_threshold_pct"
+    displayed_threshold = int(
+        st.session_state.get(threshold_widget_key, DEFAULT_CRITICAL_THRESHOLD_PCT)
+    )
+    st.markdown(
+        '<div class="nids-sidebar-heading-row">'
+        '<div class="nids-sidebar-heading">Critical threshold</div>'
+        f'<div class="nids-threshold-value">{displayed_threshold}%</div>'
+        '</div>',
+        unsafe_allow_html=True,
+    )
+    critical_threshold_pct = st.slider(
+        "Critical threshold",
+        min_value=5, max_value=100, value=DEFAULT_CRITICAL_THRESHOLD_PCT, step=5,
+        format="%d%%",
+        help="Percentage of model-flagged traffic required for a Critical session threshold.",
+        label_visibility="collapsed",
+        key=threshold_widget_key,
+    )
+
+if auth.is_auth_configured() and st.session_state.get("authenticated"):
+    with st.sidebar.container(key="sidebar_logout"):
+        if st.button("Log Out", icon=":material/logout:", width="stretch"):
+            for k in (
+                "authenticated", "user_role", "user_name", "selected_login_role",
+                "login_username",
+            ):
+                st.session_state.pop(k, None)
+            st.rerun()
 
 with st.container(key="top_notifications"):
     with st.popover("Notifications", icon=":material/notifications:"):
@@ -926,7 +1103,7 @@ def _render_export_actions(df_display, key_suffix):
     """Build report files only after the operator explicitly requests them."""
     csv = df_display.to_csv(index=False).encode('utf-8')
     pdf_bytes = reporting.build_report_pdf(df_display)
-    dl_csv, dl_pdf, print_report = st.columns(3)
+    dl_csv, dl_pdf = st.columns(2)
     with dl_csv:
         st.download_button(
             "Download CSV", csv, f"report_{key_suffix}.csv", "text/csv",
@@ -936,26 +1113,14 @@ def _render_export_actions(df_display, key_suffix):
     with dl_pdf:
         if pdf_bytes is not None:
             st.download_button(
-                "Download PDF report", pdf_bytes,
+                "Download PDF Report", pdf_bytes,
                 f"report_{key_suffix}.pdf", "application/pdf",
                 key=f"dl_pdf_{key_suffix}", width='stretch',
                 icon=":material/picture_as_pdf:",
             )
         else:
             st.caption("PDF export needs `reportlab`.")
-    with print_report:
-        if st.button(
-            "Print report",
-            icon=":material/print:",
-            key=f"print_{key_suffix}",
-            width="stretch",
-        ):
-            components.html(
-                reporting.browser_print_script(str(time.time_ns())), height=0
-            )
-
-
-def display_results(df, key_suffix="", exports_require_confirmation=False):
+def display_results(df, key_suffix="", show_exports=True):
     st.divider()
     try:
         df_display = classify(df)
@@ -971,28 +1136,8 @@ def display_results(df, key_suffix="", exports_require_confirmation=False):
             "from the models available for this batch; it does not replace their raw verdicts."
         )
 
-        export_panel_key = f"exports_ready_{key_suffix}"
-        if exports_require_confirmation and not st.session_state.get(export_panel_key):
-            st.button(
-                "Prepare report exports",
-                icon=":material/file_export:",
-                key=f"prepare_exports_{key_suffix}",
-                on_click=_set_export_panel,
-                args=(export_panel_key, True),
-            )
-            st.caption(
-                "Report files are prepared only on request; capture controls never download anything."
-            )
-        else:
+        if show_exports:
             _render_export_actions(df_display, key_suffix)
-            if exports_require_confirmation:
-                st.button(
-                    "Close export panel",
-                    icon=":material/close:",
-                    key=f"close_exports_{key_suffix}",
-                    on_click=_set_export_panel,
-                    args=(export_panel_key, False),
-                )
 
         common_cols = ['src_ip', 'flag', 'count', 'serror_rate', 'src_bytes']
         model_columns = [('RF Analysis', 'Random Forest'), ('DT Analysis', 'Decision Tree')]
@@ -1011,43 +1156,324 @@ def display_results(df, key_suffix="", exports_require_confirmation=False):
         with st.expander("Technical details"):
             st.code(traceback.format_exc(), language="text")
 
+
+def _render_live_print_button():
+    """Expose browser printing only in the Live Capture header."""
+    if st.button(
+        "Print",
+        icon=":material/print:",
+        key="live_capture_print",
+        width="stretch",
+    ):
+        components.html(reporting.browser_print_script(str(time.time_ns())), height=0)
+
+
+def _render_screen_record_control():
+    """Render a self-contained browser screen recorder for Live Capture."""
+    components.html(
+        """
+        <style>
+        html, body { margin: 0; background: transparent; font-family: sans-serif; }
+        button { width: 100%; height: 40px; border: 1px solid #0e7490;
+          border-radius: 8px; color: #fff; background: #0e7490; cursor: pointer;
+          font-weight: 600; display: flex; align-items: center; justify-content: center;
+          gap: 8px; }
+        button:hover { border-color: #155e75; background: #155e75; color: #fff; }
+        button.active { border-color: #b91c1c; background: #b91c1c; color: #fff; }
+        .dot { width: 10px; height: 10px; border: 2px solid currentColor;
+          border-radius: 50%; box-sizing: border-box; }
+        button.active .dot { border-radius: 2px; background: currentColor; }
+        </style>
+        <button id="record" type="button"><span class="dot"></span><span>Record Screen</span></button>
+        <script>
+        const host = window.parent;
+        const button = document.getElementById('record');
+        const label = button.querySelector('span:last-child');
+        function sync() {
+          const active = !!(host.__nidsScreenRecorder &&
+            host.__nidsScreenRecorder.state === 'recording');
+          button.classList.toggle('active', active);
+          label.textContent = active ? 'Stop Recording' : 'Record Screen';
+        }
+        async function stopAndSave() {
+          const recorder = host.__nidsScreenRecorder;
+          if (recorder && recorder.state !== 'inactive') recorder.stop();
+          if (host.__nidsScreenStream) {
+            host.__nidsScreenStream.getTracks().forEach(track => track.stop());
+          }
+          sync();
+        }
+        button.addEventListener('click', async () => {
+          if (host.__nidsScreenRecorder && host.__nidsScreenRecorder.state === 'recording') {
+            stopAndSave();
+            return;
+          }
+          try {
+            const stream = await host.navigator.mediaDevices.getDisplayMedia({video: true, audio: false});
+            const chunks = [];
+            const recorder = new host.MediaRecorder(stream, {mimeType: 'video/webm'});
+            host.__nidsScreenStream = stream;
+            host.__nidsScreenRecorder = recorder;
+            recorder.ondataavailable = event => { if (event.data.size) chunks.push(event.data); };
+            recorder.onstop = () => {
+              if (chunks.length) {
+                const url = host.URL.createObjectURL(new host.Blob(chunks, {type: 'video/webm'}));
+                const link = host.document.createElement('a');
+                link.href = url;
+                link.download = `nids-capture-${new Date().toISOString().replace(/[:.]/g, '-')}.webm`;
+                link.click();
+                setTimeout(() => host.URL.revokeObjectURL(url), 1000);
+              }
+              host.__nidsScreenRecorder = null;
+              host.__nidsScreenStream = null;
+              sync();
+            };
+            stream.getVideoTracks()[0].addEventListener('ended', () => {
+              if (recorder.state !== 'inactive') recorder.stop();
+            });
+            recorder.start(1000);
+            sync();
+          } catch (error) {
+            if (error.name !== 'NotAllowedError') alert(`Screen recording could not start: ${error.message}`);
+          }
+        });
+        sync();
+        </script>
+        """,
+        height=42,
+    )
+
+
+def _live_throughput_chart():
+    """Build the current 60-second throughput chart, when enough data exists."""
+    agg = throughput.aggregate_per_second(st.session_state.throughput_samples)
+    if len(agg) < 2:
+        agg_long = pd.DataFrame(columns=["ago", "Metric", "Rate"])
+    else:
+        agg = agg.copy()
+        agg["ago"] = agg["second"] - agg["second"].max()
+        agg_long = agg.melt(
+            id_vars=["ago"], value_vars=["packets", "kbytes"],
+            var_name="Metric", value_name="Rate",
+        )
+        agg_long["Metric"] = agg_long["Metric"].map(
+            {"packets": "Packets/sec", "kbytes": "KB/sec"}
+        )
+    return alt.Chart(agg_long).mark_area(opacity=0.5).encode(
+        x=alt.X("ago:Q", title="Seconds ago", scale=alt.Scale(domain=[-60, 0])),
+        y=alt.Y("Rate:Q", title="Rate"),
+        color=alt.Color(
+            "Metric:N", title=None,
+            scale=alt.Scale(
+                domain=["Packets/sec", "KB/sec"],
+                range=[COLOR_NORMAL, COLOR_IFOREST],
+            ),
+        ),
+        tooltip=[
+            alt.Tooltip("ago:Q", title="Seconds ago"),
+            "Metric:N",
+            alt.Tooltip("Rate:Q", format=".1f"),
+        ],
+    ).properties(height=180, title="Live throughput (last 60s)")
+
+
+def _render_dashboard_analytics(df):
+    """Render session-level analytics distinct from the live capture monitor."""
+    try:
+        data = classify(df)
+    except Exception as exc:
+        st.error(f"Dashboard analytics could not be prepared: {type(exc).__name__}: {exc}")
+        return None
+
+    total = len(data)
+    critical = int((data["Triage"] == triage.TRIAGE_CRITICAL).sum())
+    avg_risk = float(data["Risk Score"].mean()) if total else 0.0
+    unique_sources = int(data["src_ip"].nunique()) if "src_ip" in data else 0
+    k1, k2, k3, k4 = st.columns(4)
+    k1.metric("Session observations", total)
+    k2.metric("Unique sources", unique_sources)
+    k3.metric("Critical consensus", critical)
+    k4.metric("Average risk", f"{avg_risk:.1f}/100")
+
+    triage_counts = data["Triage"].value_counts().rename_axis("Triage").reset_index(name="Count")
+    triage_order = [
+        triage.TRIAGE_CLEAR,
+        triage.TRIAGE_GUARDED,
+        triage.TRIAGE_ELEVATED,
+        triage.TRIAGE_CRITICAL,
+    ]
+    triage_colors = ["#00CC96", "#7DD3FC", "#FFB84C", "#EF553B"]
+    triage_chart = alt.Chart(triage_counts).mark_arc(innerRadius=38, outerRadius=60).encode(
+        theta=alt.Theta("Count:Q"),
+        color=alt.Color(
+            "Triage:N",
+            scale=alt.Scale(domain=triage_order, range=triage_colors),
+            legend=alt.Legend(
+                title=None,
+                orient="bottom",
+                direction="horizontal",
+                columns=4,
+                offset=14,
+                labelLimit=110,
+                symbolSize=80,
+            ),
+        ),
+        tooltip=["Triage:N", "Count:Q"],
+    ).properties(height=160, title="Consensus triage mix")
+
+    model_rows = []
+    for verdict_col, style in MODEL_COLUMN_STYLE.items():
+        if verdict_col in data:
+            model_rows.append({
+                "Model": style["label"],
+                "Attack rate": float((data[verdict_col] == triage.ATTACK_VERDICT).mean() * 100),
+            })
+    model_rates = pd.DataFrame(model_rows)
+    model_chart = alt.Chart(model_rates).mark_bar(cornerRadiusEnd=5).encode(
+        x=alt.X("Attack rate:Q", title="Flagged as attack (%)", scale=alt.Scale(domain=[0, 100])),
+        y=alt.Y("Model:N", title=None, sort=None),
+        color=alt.Color(
+            "Model:N",
+            scale=alt.Scale(
+                domain=["Random Forest", "Decision Tree", "Isolation Forest"],
+                range=[COLOR_RF, COLOR_DT, COLOR_IFOREST],
+            ),
+            legend=None,
+        ),
+        tooltip=["Model:N", alt.Tooltip("Attack rate:Q", format=".1f")],
+    ).properties(height=160, title="Model attack-rate comparison")
+
+    risk_chart = alt.Chart(data).mark_bar(color=COLOR_DT).encode(
+        x=alt.X("Risk Score:Q", bin=alt.Bin(maxbins=10), title="Consensus risk score"),
+        y=alt.Y("count():Q", title="Observations"),
+        tooltip=[alt.Tooltip("count():Q", title="Observations")],
+    ).properties(height=140, title="Risk-score distribution")
+
+    source_summary = (
+        data.groupby("src_ip", as_index=False)
+        .agg(Observations=("src_ip", "size"), **{"Average risk": ("Risk Score", "mean")})
+        .sort_values(["Observations", "Average risk"], ascending=False)
+        .head(8)
+    )
+    source_chart = alt.Chart(source_summary).mark_bar(cornerRadiusEnd=4).encode(
+        x=alt.X("Observations:Q", title="Observations"),
+        y=alt.Y("src_ip:N", title=None, sort="-x"),
+        color=alt.Color(
+            "Average risk:Q",
+            scale=alt.Scale(domain=[0, 100], range=[COLOR_NORMAL, COLOR_ATTACK]),
+            title="Average risk",
+            legend=alt.Legend(
+                orient="bottom",
+                direction="horizontal",
+                gradientLength=160,
+                titleOrient="left",
+                offset=10,
+            ),
+        ),
+        tooltip=["src_ip:N", "Observations:Q", alt.Tooltip("Average risk:Q", format=".1f")],
+    ).properties(height=140, title="Most active source IPs")
+
+    with st.container(key="dashboard_chart_grid"):
+        chart_left, chart_right = st.columns(2, gap="medium", vertical_alignment="top")
+        with chart_left:
+            with st.container(border=True, key="dashboard_triage_card"):
+                st.altair_chart(triage_chart, width="stretch")
+        with chart_right:
+            with st.container(border=True, key="dashboard_model_card"):
+                st.altair_chart(model_chart, width="stretch")
+
+        risk_left, source_right = st.columns(2, gap="medium", vertical_alignment="top")
+        with risk_left:
+            with st.container(border=True, key="dashboard_risk_card"):
+                st.altair_chart(risk_chart, width="stretch")
+        with source_right:
+            with st.container(border=True, key="dashboard_sources_card"):
+                st.altair_chart(source_chart, width="stretch")
+
+    with st.expander("Recent session evidence"):
+        evidence_columns = [
+            column for column in
+            ["src_ip", "Triage", "Risk Score", "RF Analysis", "DT Analysis", "Anomaly Analysis"]
+            if column in data
+        ]
+        st.dataframe(data[evidence_columns].tail(25), width="stretch", hide_index=True)
+    return data
+
 # --- 7. UI Layout ---
-tab1, tab2, tab3, tab4, tab5 = st.tabs(
-    ["Live Capture", "Upload PCAP", "Model Logic", "History", "Credits"]
+if 'raw_packets' not in st.session_state:
+    st.session_state.raw_packets = []
+if 'continuous_df' not in st.session_state:
+    st.session_state.continuous_df = pd.DataFrame()
+if 'is_running' not in st.session_state:
+    st.session_state.is_running = False
+if 'total_captured' not in st.session_state:
+    st.session_state.total_captured = 0
+if 'throughput_samples' not in st.session_state:
+    st.session_state.throughput_samples = []
+
+dashboard_tab, live_tab, upload_tab, model_tab, autonomy_tab, history_tab, credits_tab = st.tabs(
+    ["Dashboard", "Live Capture", "Upload PCAP", "Model Logic", "Autonomy", "History", "Credits"]
 )
 
-# === TAB 1: Live Capture ===
-with tab1:
-    title_column, _title_control_spacer, title_role_column = st.columns(
+# === TAB 1: Dashboard ===
+with dashboard_tab:
+    dashboard_export_key = "exports_ready_dashboard"
+    dashboard_title_column, dashboard_export_column = st.columns(
+        [4, 1], vertical_alignment="center"
+    )
+    with dashboard_title_column:
+        st.subheader("Detection Dashboard")
+    with dashboard_export_column:
+        if not st.session_state.continuous_df.empty:
+            with st.container(key="dashboard_export_control"):
+                dashboard_exports_open = bool(st.session_state.get(dashboard_export_key))
+                st.button(
+                    "Close Report Exports" if dashboard_exports_open else "Prepare Report Exports",
+                    icon=":material/close:" if dashboard_exports_open else ":material/file_export:",
+                    key="toggle_exports_dashboard",
+                    on_click=_set_export_panel,
+                    args=(dashboard_export_key, not dashboard_exports_open),
+                    width="stretch",
+                )
+
+    if st.session_state.continuous_df.empty:
+        st.info(
+            "No live session evidence yet. Open **Live Capture** to start monitoring, "
+            "or use **Upload PCAP** to analyse a saved capture."
+        )
+    else:
+        st.caption(
+            "Session analytics · Capture is "
+            f"**{'running' if st.session_state.is_running else 'paused'}** · "
+            f"{st.session_state.total_captured} packets captured"
+        )
+        dashboard_data = _render_dashboard_analytics(st.session_state.continuous_df)
+        if dashboard_data is not None and st.session_state.get(dashboard_export_key):
+            _render_export_actions(dashboard_data, "dashboard")
+
+# === TAB 2: Live Capture ===
+with live_tab:
+    title_column, title_print_column, title_record_column = st.columns(
         [3, 1, 1], vertical_alignment="center"
     )
     with title_column:
         st.subheader("Live Network Sniffer")
-    with title_role_column:
-        role_label, _ = _access_identity()
-        st.markdown(
-            f'<div class="nids-live-role"><span class="nids-role-chip">'
-            f'{html.escape(role_label.upper())}</span></div>',
-            unsafe_allow_html=True,
-        )
+    with title_print_column:
+        with st.container(key="live_print_control"):
+            _render_live_print_button()
+    with title_record_column:
+        with st.container(key="live_record_control"):
+            _render_screen_record_control()
 
     def set_capture_running(running):
         """Update capture state before Streamlit renders the next widget tree."""
         st.session_state.is_running = bool(running)
+        if running:
+            st.session_state.pop("capture_error", None)
         # A capture control must never prepare or trigger report downloads.
         # Closing the panel also avoids rebuilding PDF bytes on live reruns.
+        st.session_state.pop("exports_ready_dashboard", None)
         st.session_state.pop("exports_ready_continuous", None)
-
-    if 'raw_packets' not in st.session_state:
-        st.session_state.raw_packets = []
-    if 'continuous_df' not in st.session_state:
-        st.session_state.continuous_df = pd.DataFrame()
-    if 'is_running' not in st.session_state:
-        st.session_state.is_running = False
-    if 'total_captured' not in st.session_state:
-        st.session_state.total_captured = 0
-    if 'throughput_samples' not in st.session_state:
-        st.session_state.throughput_samples = []
 
     capture_ready, capture_message = netcheck.capture_readiness()
     if not capture_ready:
@@ -1095,133 +1521,100 @@ with tab1:
         "mirror switch traffic with SPAN, use a network TAP, or run the sensor on the gateway/router."
     )
     st.caption(
-        f"Dashboard refreshes about every **{LIVE_REFRESH_SECONDS:g} seconds**. "
-        "Stop Capture only pauses packet intake and never prepares or downloads a report."
+        f"The packet counter and fixed-height throughput graph refresh every "
+        f"**{LIVE_REFRESH_SECONDS:g} seconds** while capturing. Model evidence updates on "
+        "Start/Stop transitions. Stop Capture never prepares or downloads a report."
     )
+
+    @st.fragment(run_every=LIVE_REFRESH_SECONDS if st.session_state.is_running else None)
+    def capture_counter_fragment():
+        """Capture one batch and redraw only the fixed-height packet counter."""
+        if st.session_state.is_running:
+            pkt_batch = []
+            try:
+                pkt_batch = sniff(
+                    iface=st.session_state.capture_interface,
+                    count=LIVE_BATCH_SIZE,
+                    timeout=LIVE_SNIFF_TIMEOUT,
+                )
+            except (OSError, PermissionError, RuntimeError, Scapy_Exception) as exc:
+                st.session_state.is_running = False
+                st.session_state.capture_error = (
+                    f"Live capture stopped: {type(exc).__name__}: {exc}. "
+                    f"{netcheck.privilege_hint()}"
+                )
+                st.rerun()
+
+            if pkt_batch:
+                st.session_state.raw_packets.extend(pkt_batch)
+                st.session_state.raw_packets = st.session_state.raw_packets[-RAW_PACKET_BUFFER:]
+                st.session_state.total_captured += len(pkt_batch)
+
+                now_sec = int(time.time())
+                batch_bytes = sum(len(packet) for packet in pkt_batch)
+                st.session_state.throughput_samples.append(
+                    {"t": now_sec, "packets": len(pkt_batch), "bytes": batch_bytes}
+                )
+                st.session_state.throughput_samples = throughput.trim_samples(
+                    st.session_state.throughput_samples, max_seconds=60, now=now_sec
+                )
+
+                windowed_df = packets_to_df(st.session_state.raw_packets)
+                st.session_state.continuous_df = windowed_df.tail(100)
+                if not st.session_state.continuous_df.empty:
+                    new_rows = windowed_df.tail(len(pkt_batch))
+                    classified_rows = classify(new_rows)
+                    storage.save_detections(classified_rows, source="live")
+                    autonomy.record_batch(
+                        classified_rows,
+                        source="live",
+                        mode=_autonomy_mode(),
+                        actor=_autonomy_actor(),
+                    )
+
+        st.metric("Packets captured this session", st.session_state.total_captured)
 
     c1, c2 = st.columns([1, 4])
     with c1:
         if selected_interface:
             st.caption(f"Adapter: **{interface_labels[selected_interface]}**")
     with c2:
-        status_placeholder = st.empty()
+        capture_counter_fragment()
 
-    throughput_placeholder = st.empty()
-    live_placeholder = st.empty()
-
-    def render_throughput():
-        agg = throughput.aggregate_per_second(st.session_state.throughput_samples)
-        if len(agg) < 2:
-            return
-        # Plot seconds-ago rather than the raw epoch second: an axis reading
-        # "1721208000" is meaningless to a human watching live traffic.
-        agg = agg.copy()
-        agg["ago"] = agg["second"] - agg["second"].max()
-        agg_long = agg.melt(
-            id_vars=["ago"], value_vars=["packets", "kbytes"],
-            var_name="Metric", value_name="Rate",
-        )
-        agg_long["Metric"] = agg_long["Metric"].map(
-            {"packets": "Packets/sec", "kbytes": "KB/sec"}
-        )
-        chart = alt.Chart(agg_long).mark_area(opacity=0.5).encode(
-            x=alt.X("ago:Q", title="Seconds ago", scale=alt.Scale(domain=[-60, 0])),
-            y=alt.Y("Rate:Q", title="Rate"),
-            color=alt.Color(
-                "Metric:N", title=None,
-                scale=alt.Scale(domain=["Packets/sec", "KB/sec"], range=[COLOR_NORMAL, COLOR_IFOREST]),
-            ),
-            tooltip=[alt.Tooltip("ago:Q", title="Seconds ago"), "Metric:N", alt.Tooltip("Rate:Q", format=".1f")],
-        ).properties(height=180, title="Live throughput (last 60s)")
-        throughput_placeholder.altair_chart(chart, width='stretch')
-
-    if st.session_state.is_running:
-        refresh_cycle_started = time.monotonic()
-        # Capture ONE batch per script run, then st.rerun() to come back for
-        # the next one. A blocking `while` loop here would never return control
-        # to Streamlit, and since a button click is only processed on a fresh
-        # script run, Stop Capture could never fire — the capture would be
-        # unstoppable. Rerunning between batches keeps the UI responsive.
+    capture_error = st.session_state.get("capture_error")
+    if capture_error:
+        st.error(capture_error)
+    elif st.session_state.is_running:
         st.info("**Capturing live traffic.** Use Stop Capture to pause packet intake.")
-
-        try:
-            pkt_batch = sniff(
-                iface=st.session_state.capture_interface,
-                count=LIVE_BATCH_SIZE,
-                timeout=LIVE_SNIFF_TIMEOUT,
-            )
-        except (OSError, PermissionError, RuntimeError, Scapy_Exception) as exc:
-            st.session_state.is_running = False
-            st.error(
-                f"Live capture stopped: {type(exc).__name__}: {exc}. "
-                f"{netcheck.privilege_hint()}"
-            )
-            pkt_batch = []
-
-        if pkt_batch:
-            # Keep enough raw packets around (not just derived rows) so
-            # packets_to_df can recompute proper windowed stats
-            # (count/srv_count/*_rate) instead of a single-packet snapshot.
-            st.session_state.raw_packets.extend(pkt_batch)
-            st.session_state.raw_packets = st.session_state.raw_packets[-RAW_PACKET_BUFFER:]
-            st.session_state.total_captured += len(pkt_batch)
-
-            # Record a throughput sample for this second.
-            now_sec = int(time.time())
-            batch_bytes = sum(len(p) for p in pkt_batch)
-            st.session_state.throughput_samples.append(
-                {"t": now_sec, "packets": len(pkt_batch), "bytes": batch_bytes}
-            )
-            st.session_state.throughput_samples = throughput.trim_samples(
-                st.session_state.throughput_samples, max_seconds=60, now=now_sec
-            )
-
-            windowed_df = packets_to_df(st.session_state.raw_packets)
-            st.session_state.continuous_df = windowed_df.tail(100)
-
-            if not st.session_state.continuous_df.empty:
-                # Persist only this batch's newest rows, not the whole rolling
-                # 100-row display window (which would re-insert already-saved
-                # rows into history on every batch).
-                new_rows = windowed_df.tail(len(pkt_batch))
-                storage.save_detections(classify(new_rows), source="live")
-
-        status_placeholder.metric("Packets captured this session", st.session_state.total_captured)
-        render_throughput()
-
-        if not st.session_state.continuous_df.empty:
-            with live_placeholder.container():
-                display_results(
-                    st.session_state.continuous_df,
-                    "continuous",
-                    exports_require_confirmation=True,
-                )
-        else:
-            live_placeholder.caption("Waiting for the first packets…")
-
-        if st.session_state.is_running:
-            remaining_refresh_time = LIVE_REFRESH_SECONDS - (
-                time.monotonic() - refresh_cycle_started
-            )
-            if remaining_refresh_time > 0:
-                time.sleep(remaining_refresh_time)
-            st.rerun()
-
     elif not st.session_state.continuous_df.empty:
-        status_placeholder.metric("Packets captured this session", st.session_state.total_captured)
-        render_throughput()
-        with live_placeholder.container():
-            st.info("Capture is paused. The last captured window remains available below.")
+        st.info(
+            "Capture is paused. The latest throughput and model evidence are shown below; "
+            "Dashboard provides aggregate session analytics."
+        )
+    elif capture_ready:
+        st.info("Ready to monitor. Select Start Capture to begin collecting traffic.")
+    else:
+        st.info(
+            "Live capture is unavailable on this host. Upload PCAP analysis remains available."
+        )
+
+    @st.fragment(run_every=LIVE_REFRESH_SECONDS if st.session_state.is_running else None)
+    def live_throughput_fragment():
+        """Redraw the live chart inside a height-reserved region."""
+        st.altair_chart(_live_throughput_chart(), width="stretch")
+
+    with st.container(key="live_throughput_panel"):
+        live_throughput_fragment()
+    if not st.session_state.continuous_df.empty:
+        with st.container(key="live_results_panel"):
             display_results(
                 st.session_state.continuous_df,
                 "continuous",
-                exports_require_confirmation=True,
+                show_exports=False,
             )
-    elif capture_ready:
-        live_placeholder.caption("Select Start Capture to begin monitoring live traffic.")
 
-# === TAB 2: File Upload (Auto-Clean Logic Added) ===
-with tab2:
+# === TAB 3: File Upload (Auto-Clean Logic Added) ===
+with upload_tab:
     st.subheader("Analyze .pcap Files")
     st.caption(
         "Upload a Wireshark capture to classify it with all models. "
@@ -1259,7 +1652,14 @@ with tab2:
                     # Persist exactly once per uploaded file (this block only
                     # runs when the filename changes), not on every rerun.
                     if not upload_df.empty:
-                        storage.save_detections(classify(upload_df), source="upload")
+                        classified_upload = classify(upload_df)
+                        storage.save_detections(classified_upload, source="upload")
+                        autonomy.record_batch(
+                            classified_upload,
+                            source="upload",
+                            mode=_autonomy_mode(),
+                            actor=_autonomy_actor(),
+                        )
                 except Exception as exc:
                     # Scapy readers raise several parser-specific exception
                     # types for malformed/untrusted captures. Keep all of
@@ -1278,8 +1678,8 @@ with tab2:
     elif 'upload_data' in st.session_state:
         st.info("This capture contains no IPv4 packets that can be classified.")
 
-# === TAB 3: Explainable AI ===
-with tab3:
+# === TAB 4: Explainable AI ===
+with model_tab:
     st.subheader("Explainable AI")
     st.caption(
         "Which of the 41 NSL-KDD features each supervised model leans on most "
@@ -1317,8 +1717,158 @@ with tab3:
             "`feature_importances_` for it."
         )
 
-# === TAB 4: History (persisted beyond the in-memory 100-row buffer) ===
-with tab4:
+# === TAB 5: Policy-governed autonomous defense ===
+with autonomy_tab:
+    st.subheader("Autonomous Defense")
+    st.caption(
+        "Correlates high-confidence model evidence into reversible response actions. "
+        "Shadow is the safe default; host changes require explicit server policy."
+    )
+
+    autonomy_policy = autonomy.policy_from_env()
+    mode_labels = {
+        autonomy.MODE_SHADOW: "Shadow",
+        autonomy.MODE_APPROVAL: "Approval",
+        autonomy.MODE_AUTONOMOUS: "Autonomous",
+    }
+    mode_help = {
+        autonomy.MODE_SHADOW: "Observe and simulate decisions without applying actions.",
+        autonomy.MODE_APPROVAL: "Queue eligible responses for Administrator approval.",
+        autonomy.MODE_AUTONOMOUS: "Apply eligible responses only when server execution is enabled.",
+    }
+    mode_column, guardrail_column = st.columns([1, 2], vertical_alignment="bottom")
+    with mode_column:
+        current_mode = _autonomy_mode()
+        selected_mode = st.selectbox(
+            "Operating mode",
+            options=list(autonomy.MODES),
+            index=list(autonomy.MODES).index(current_mode),
+            format_func=lambda value: mode_labels[value],
+            disabled=not is_admin_user(),
+            key="autonomy_mode_selector",
+        )
+        if selected_mode != current_mode and is_admin_user():
+            st.session_state.autonomy_mode = selected_mode
+            st.rerun()
+        elif "autonomy_mode" not in st.session_state:
+            st.session_state.autonomy_mode = current_mode
+    with guardrail_column:
+        st.info(
+            f"**{mode_labels[_autonomy_mode()]}:** {mode_help[_autonomy_mode()]} "
+            f"Minimum evidence: {autonomy_policy.min_events} events at "
+            f"risk {autonomy_policy.min_risk}+. Temporary block TTL: "
+            f"{autonomy_policy.block_ttl_minutes} minutes."
+        )
+
+    if autonomy_policy.execution_enabled:
+        st.success(
+            "Server-side response execution is enabled. Private sources remain protected "
+            "unless NIDS_AUTONOMY_ALLOW_PRIVATE is explicitly enabled."
+        )
+    else:
+        st.warning(
+            "Response execution is disabled by server policy. Decisions and approvals are "
+            "audited, but no firewall state will change. Set NIDS_AUTONOMY_EXECUTE=true "
+            "only after validating Shadow and Approval modes."
+        )
+
+    autonomy_summary = autonomy.query_summary()
+    a1, a2, a3, a4 = st.columns(4)
+    a1.metric("Correlated incidents", autonomy_summary["incidents"])
+    a2.metric("Pending approvals", autonomy_summary["pending"])
+    a3.metric("Active blocks", autonomy_summary["active"])
+    a4.metric("Shadow simulations", autonomy_summary["simulated"])
+
+    history_for_drift = storage.query_all()
+    drift = autonomy.drift_report(history_for_drift)
+    drift_left, drift_right = st.columns([1, 3], vertical_alignment="center")
+    with drift_left:
+        st.metric("Behavior drift", f"{drift['score']:.1f}/100", drift["status"].title())
+    with drift_right:
+        if drift["status"] == "learning":
+            st.caption("Adaptive baseline is learning; more persisted traffic is required.")
+        elif drift["retrain_recommended"]:
+            st.warning(
+                "Material behavior drift detected. Review evidence and approve an offline "
+                "retraining run; production models are never replaced automatically."
+            )
+        else:
+            st.caption(
+                "Recent traffic is compared with older persisted behavior. Drift signals "
+                "recommend review but cannot silently retrain or replace models."
+            )
+
+    pending_actions = autonomy.query_actions(status="pending")
+    st.markdown("##### Response approval queue")
+    if pending_actions.empty:
+        st.caption("No response actions are waiting for approval.")
+    else:
+        st.dataframe(pending_actions, width="stretch", hide_index=True)
+        if is_admin_user():
+            selected_action_id = st.selectbox(
+                "Pending action",
+                pending_actions["id"].astype(int).tolist(),
+                format_func=lambda action_id: (
+                    f"Action {action_id} · "
+                    f"{pending_actions.loc[pending_actions['id'] == action_id, 'target'].iloc[0]}"
+                ),
+            )
+            approve_column, deny_column = st.columns(2)
+            if approve_column.button(
+                "Approve Response", icon=":material/verified_user:", width="stretch"
+            ):
+                ok, message = autonomy.decide_action(
+                    selected_action_id, "approve", _autonomy_actor(),
+                    policy=autonomy_policy,
+                )
+                (st.success if ok else st.error)(message)
+                st.rerun()
+            if deny_column.button(
+                "Deny Response", icon=":material/block:", width="stretch"
+            ):
+                ok, message = autonomy.decide_action(
+                    selected_action_id, "deny", _autonomy_actor(),
+                    policy=autonomy_policy,
+                )
+                (st.success if ok else st.error)(message)
+                st.rerun()
+        else:
+            st.info("Viewer access can inspect the queue but cannot approve or deny actions.")
+
+    active_actions = autonomy.query_actions(status="active")
+    if not active_actions.empty:
+        st.markdown("##### Active containment")
+        st.dataframe(active_actions, width="stretch", hide_index=True)
+        if is_admin_user():
+            rollback_id = st.selectbox(
+                "Active block",
+                active_actions["id"].astype(int).tolist(),
+                key="autonomy_rollback_action",
+            )
+            if st.button(
+                "Rollback Selected Block", icon=":material/undo:", width="stretch"
+            ):
+                ok, message = autonomy.rollback_action(
+                    rollback_id, _autonomy_actor()
+                )
+                (st.success if ok else st.error)(message)
+                st.rerun()
+
+    with st.expander("Correlated incidents", expanded=True):
+        incidents = autonomy.query_incidents()
+        if incidents.empty:
+            st.caption("No eligible high-confidence incidents have been correlated yet.")
+        else:
+            st.dataframe(incidents, width="stretch", hide_index=True)
+    with st.expander("Response audit trail"):
+        audit_rows = autonomy.query_audit()
+        if audit_rows.empty:
+            st.caption("No autonomy decisions have been audited yet.")
+        else:
+            st.dataframe(audit_rows, width="stretch", hide_index=True)
+
+# === TAB 6: History (persisted beyond the in-memory 100-row buffer) ===
+with history_tab:
     st.subheader("Detection History")
     try:
         _db_label = os.path.relpath(storage.DEFAULT_DB_PATH, BASE_DIR)
@@ -1401,7 +1951,7 @@ with tab4:
                 "encrypted database backups require an administrator account."
             )
             if st.button(
-                "Review role permissions",
+                "Review Role Permissions",
                 icon=":material/badge:",
                 key="history_permissions",
             ):
@@ -1415,7 +1965,7 @@ with tab4:
             exp_csv, exp_xlsx, exp_enc = st.columns(3)
             with exp_csv:
                 st.download_button(
-                    "CSV (all history)",
+                    "CSV (All History)",
                     all_history.to_csv(index=False).encode("utf-8"),
                     "nids_history.csv",
                     "text/csv",
@@ -1426,7 +1976,7 @@ with tab4:
                 xlsx_bytes = _dataframe_to_excel_bytes(all_history)
                 if xlsx_bytes is not None:
                     st.download_button(
-                        "Excel (all history)",
+                        "Excel (All History)",
                         xlsx_bytes,
                         "nids_history.xlsx",
                         "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -1445,7 +1995,7 @@ with tab4:
                     enc_bytes = crypto.encrypt_file(storage.DEFAULT_DB_PATH)
                     if enc_bytes is not None:
                         st.download_button(
-                            "Encrypted backup",
+                            "Encrypted Backup",
                             enc_bytes,
                             "nids_history.db.enc",
                             "application/octet-stream",
@@ -1519,14 +2069,15 @@ with tab4:
         source_filter = None if selected_source == "All" else selected_source
         st.dataframe(storage.query_recent(limit=200, source=source_filter), width='stretch')
 
-# === TAB 5: Project ownership and credits ===
-with tab5:
+# === TAB 7: Project ownership and credits ===
+with credits_tab:
     render_product_hero()
     render_credits()
 
 st.markdown(
-    f'<footer class="nids-footer"><span>{PRODUCT_NAME} · v{NIDS_VERSION} ({RELEASE_CODENAME})</span>'
-    '<span>Local capture respects adapter visibility · '
-    '<a href="https://github.com/SufiyanAasim/network-analysis-intrusion-system" target="_blank">GitHub</a></span></footer>',
+    f'<footer class="nids-footer"><span>{PRODUCT_NAME} · v{NIDS_VERSION} '
+    f'({RELEASE_CODENAME})</span><span>Local capture respects adapter visibility · '
+    '<a href="https://github.com/SufiyanAasim/network-analysis-intrusion-system" '
+    'target="_blank">GitHub</a></span></footer>',
     unsafe_allow_html=True,
 )
