@@ -10,13 +10,17 @@
       dual-model comparison, explainable AI) as the stable starting point.
 - [ ] Finalize release codename/naming for v1.0.0 and v2.0.0.
 
-## v3.0.0 — active feature development (next)
-- [ ] Replace simplified live-capture feature engineering (several NSL-KDD
-      fields are hardcoded/static) with fuller windowed statistics.
+## v3.0.0 — active feature development (in progress)
+- [x] Replace simplified live-capture feature engineering with a real
+      trailing 2s/100-connection windowed computation.
+- [x] Persist detection history beyond the in-memory 100-row buffer
+      (SQLite, `src/nids/storage.py`, "📜 History" tab).
+- [x] Critical-threat alerting (Slack / webhook / email), cooldown-throttled.
+- [x] Third model: Isolation Forest anomaly detection alongside RF/DT.
 - [ ] Add CI job that smoke-tests `streamlit run` boots without error.
-- [ ] New features to be decided.
+- [ ] Tag `v3.0.0` once the above is verified end-to-end.
 
 ## Later
-- [ ] Persist live-capture history beyond the in-memory 100-row buffer.
 - [ ] Add a model-retraining CI job triggered on `data/nsl-kdd/` changes.
-- [ ] Optional: add a lightweight anomaly-detection model as a third comparison column.
+- [ ] Auth/access control if the dashboard is deployed beyond localhost.
+- [ ] PDF/report export in addition to CSV download.

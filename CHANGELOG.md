@@ -7,6 +7,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+- Real windowed `count`/`srv_count`/`*serror_rate`/`*same_srv_rate` feature
+  computation in `src/nids/features.py` (trailing 2s / 100-connection
+  window, keyed off each packet's capture timestamp), replacing the
+  hardcoded single-packet approximation.
+- `src/nids/storage.py` — SQLite-backed persistence (`data/history.db`) for
+  every classified detection, beyond the in-memory 100-row UI buffer. New
+  "📜 History" tab shows totals and the most recent 200 detections.
+- `src/nids/alerts.py` — critical-threat alerting via Slack incoming
+  webhook, generic webhook, or SMTP email, configured via `.env`. Alerts
+  are cooldown-throttled per model (`ALERT_COOLDOWN_SECONDS`, default 60s)
+  so a sustained attack doesn't spam every rerun.
+- `src/nids/anomaly.py` + Isolation Forest as a third, unsupervised
+  comparison model alongside Random Forest and Decision Tree
+  (`scripts/train_models.py` now also trains and saves
+  `models/iforest_model.pkl`; the app degrades gracefully to the two
+  original models if that file isn't present).
+- Tests for all of the above (`tests/test_storage.py`, `tests/test_alerts.py`,
+  `tests/test_anomaly.py`, plus new windowing tests in `tests/test_features.py`).
+
+### Changed
+- Live-capture loop now keeps a rolling raw-packet buffer
+  (`st.session_state.raw_packets`) instead of only accumulating
+  already-computed rows, so windowed stats have real history to compute from.
+- `display_results` refactored to a single `render_model_column` helper
+  shared by all model columns (2 or 3), removing the duplicated
+  RF/DT rendering blocks.
+
 ## [2.0.0] - 2026-07-15
 
 ### Added

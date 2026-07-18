@@ -29,3 +29,27 @@ The sidebar accuracy is measured on the NSL-KDD test set, not live traffic.
 The `.pkl` files are tied to the scikit-learn version they were trained
 with. If you upgrade `scikit-learn`, retrain with
 `python scripts/train_models.py`.
+
+## No "🧭 Isolation Forest" column / sidebar says the model isn't found
+
+`models/iforest_model.pkl` is only created once you run
+`python scripts/train_models.py` after upgrading to v3.0.0-alpha.1 — it
+isn't in the repo by default. The app works fine with just RF/DT until then.
+
+## Alerts aren't firing on a critical threat
+
+- Check `.env` has at least one of `SLACK_WEBHOOK_URL`, `ALERT_WEBHOOK_URL`,
+  or `ALERT_SMTP_HOST`/`ALERT_EMAIL_FROM`/`ALERT_EMAIL_TO` set — all
+  channels are opt-in and silently skipped if unconfigured.
+- Alerts are cooldown-throttled per model (`ALERT_COOLDOWN_SECONDS`,
+  default 60s) — a second CRITICAL reading within the cooldown window won't
+  re-alert.
+- A failed channel never raises; check the "🔔 Alert sent via: ..." caption
+  under the summary to see which channels actually succeeded.
+
+## `data/history.db` growing large / locked errors under heavy live capture
+
+SQLite handles the write volume from a single-user dashboard fine, but if
+you see `database is locked` errors under unusually heavy concurrent load,
+close other processes reading `data/history.db` at the same time (e.g. a
+DB browser tool) — SQLite allows only one writer at a time.
