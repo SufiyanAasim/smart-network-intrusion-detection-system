@@ -7,6 +7,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [6.0.0] - 2026-07-17
+
+### Added
+- **GeoIP + source-IP geography** (`src/nids/geo.py`) — History tab shows a
+  breakdown of distinct source IPs by type (private / public / loopback /
+  reserved). If `geoip2` + a MaxMind GeoLite2-City DB (`GEOIP_DB_PATH`) are
+  present, public IPs are plotted on a world map; otherwise a clear caption
+  explains how to enable it.
+- **PDF report export** (`src/nids/reporting.py`, reportlab) — a
+  "📄 Download PDF report" button beside the CSV download summarizes a
+  classified batch (totals, per-model attack counts, top attacker IPs).
+- **Real-time throughput graph** (`src/nids/throughput.py`) — the Live
+  Capture tab shows a live packets/sec + KB/sec area chart over a rolling
+  60-second window.
+- **Sound / browser alert notification** (`src/nids/notify.py`) — opt-in
+  sidebar toggles play a synthesized beep and/or raise a browser
+  Notification on a critical threat (cooldown-throttled with existing alerts).
+- **Npcap install-check banner** (`src/nids/netcheck.py`) — the Live Capture
+  tab detects a missing packet-capture provider and shows a platform-specific
+  fix (Npcap link on Windows), disabling "Start Capture" instead of silently
+  capturing nothing.
+- Tests for all five modules (`tests/test_geo.py`, `test_reporting.py`,
+  `test_throughput.py`, `test_notify.py`, `test_netcheck.py`).
+
+### Notes
+- Codename: **Aegis** (Guardian/Security theme) — a **grand release**
+  bundling 5 features, per the locked v4–v8 cadence (see RELEASE.md).
+- New dependencies: `reportlab>=4.0` (PDF), `geoip2>=4.7` (optional GeoIP).
+
 ## [5.0.0] - 2026-07-17
 
 ### Added

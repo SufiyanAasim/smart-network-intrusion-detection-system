@@ -14,6 +14,7 @@ _BASE_DIR = os.path.dirname(_SRC_DIR)
 _LOGO_PATH = os.path.join(_BASE_DIR, "assets", "images", "logo.svg")
 
 import streamlit as st  # noqa: E402
+import streamlit.components.v1 as components  # noqa: E402
 import pandas as pd  # noqa: E402
 import joblib  # noqa: E402
 from scapy.all import sniff, rdpcap  # noqa: E402
@@ -24,7 +25,7 @@ import altair as alt  # noqa: E402
 import time  # noqa: E402
 
 from nids.features import MODEL_FEATURES, WINDOW_CONNECTIONS, preprocess_data, packets_to_df  # noqa: E402
-from nids import storage, alerts, anomaly  # noqa: E402
+from nids import storage, alerts, anomaly, geo, reporting, throughput, notify, netcheck  # noqa: E402
 from nids import __version__ as NIDS_VERSION  # noqa: E402
 
 # Raw packets kept in session_state for live capture, so packets_to_df can
@@ -173,6 +174,13 @@ critical_threshold_pct = st.sidebar.slider(
          "above 0% and below this is SUSPICIOUS.",
 )
 
+st.sidebar.header("🔔 Notifications")
+enable_sound_alert = st.sidebar.checkbox("Play a sound on critical threat", value=False)
+enable_browser_notification = st.sidebar.checkbox(
+    "Show a browser notification on critical threat", value=False,
+    help="Your browser will ask for notification permission the first time.",
+)
+
 with st.sidebar.expander("ℹ️ About this project"):
     st.markdown(
         f"""
@@ -231,6 +239,18 @@ def generate_smart_summary(df, col_name, model_name, critical_threshold=DEFAULT_
             sent_channels = alerts.send_critical_alert(model_name, attack_pct, top_attacker, top_victim)
             if sent_channels:
                 st.caption(f"🔔 Alert sent via: {', '.join(sent_channels)}")
+
+            # Client-side sound / browser notification (opt-in via sidebar).
+            if enable_sound_alert or enable_browser_notification:
+                components.html(
+                    notify.alert_html(
+                        f"{model_name} flagged {attack_pct:.1f}% of traffic (attacker {top_attacker})",
+                        play_sound=enable_sound_alert,
+                        browser_notification=enable_browser_notification,
+                        nonce=str(st.session_state[cooldown_key]),
+                    ),
+                    height=0,
+                )
 
 def classify(df):
     """Run both models on df and return it with RF/DT Analysis verdict columns.
@@ -306,8 +326,19 @@ def display_results(df, key_suffix="", allow_download=True):
         df_display = classify(df)
 
         if allow_download:
-            csv = df_display.to_csv(index=False).encode('utf-8')
-            st.download_button("⬇️ Download CSV", csv, f"report_{key_suffix}.csv", "text/csv")
+            dl_csv, dl_pdf = st.columns(2)
+            with dl_csv:
+                csv = df_display.to_csv(index=False).encode('utf-8')
+                st.download_button("⬇️ Download CSV", csv, f"report_{key_suffix}.csv", "text/csv")
+            with dl_pdf:
+                pdf_bytes = reporting.build_report_pdf(df_display)
+                if pdf_bytes is not None:
+                    st.download_button(
+                        "📄 Download PDF report", pdf_bytes,
+                        f"report_{key_suffix}.pdf", "application/pdf",
+                    )
+                else:
+                    st.caption("PDF export needs `reportlab`.")
 
         common_cols = ['src_ip', 'flag', 'count', 'serror_rate', 'src_bytes']
         model_columns = [('RF Analysis', 'Random Forest'), ('DT Analysis', 'Decision Tree')]
@@ -330,12 +361,17 @@ tab1, tab2, tab3, tab4 = st.tabs(
 with tab1:
     st.subheader("Live Network Sniffer")
 
+    capture_ready, capture_message = netcheck.capture_readiness()
+    if not capture_ready:
+        st.warning(f"⚠️ {capture_message}")
+
     c1, c2 = st.columns([1, 4])
     with c1:
-        start = st.button("▶️ Start Capture")
+        start = st.button("▶️ Start Capture", disabled=not capture_ready)
         stop = st.button("⏹️ Stop Capture")
     status_placeholder = c2.empty()
 
+    throughput_placeholder = st.empty()
     live_placeholder = st.empty()
 
     if 'raw_packets' not in st.session_state:
@@ -350,10 +386,34 @@ with tab1:
     if 'total_captured' not in st.session_state:
         st.session_state.total_captured = 0
 
+    if 'throughput_samples' not in st.session_state:
+        st.session_state.throughput_samples = []
+
     if start:
         st.session_state.is_running = True
     if stop:
         st.session_state.is_running = False
+
+    def render_throughput():
+        agg = throughput.aggregate_per_second(st.session_state.throughput_samples)
+        if len(agg) >= 2:
+            agg_long = agg.melt(
+                id_vars=["second"], value_vars=["packets", "kbytes"],
+                var_name="Metric", value_name="Rate",
+            )
+            agg_long["Metric"] = agg_long["Metric"].map(
+                {"packets": "Packets/sec", "kbytes": "KB/sec"}
+            )
+            chart = alt.Chart(agg_long).mark_area(opacity=0.5).encode(
+                x=alt.X("second:Q", title="Time (epoch seconds)"),
+                y=alt.Y("Rate:Q"),
+                color=alt.Color(
+                    "Metric:N",
+                    scale=alt.Scale(domain=["Packets/sec", "KB/sec"], range=["#00CC96", "#22D3EE"]),
+                ),
+                tooltip=["second", "Metric", "Rate"],
+            ).properties(height=180, title="📶 Live throughput (last 60s)")
+            throughput_placeholder.altair_chart(chart, width='stretch')
 
     if st.session_state.is_running:
         with st.spinner("Monitoring Network..."):
@@ -368,6 +428,17 @@ with tab1:
                     st.session_state.raw_packets = st.session_state.raw_packets[-RAW_PACKET_BUFFER:]
                     st.session_state.total_captured += len(pkt_batch)
                     status_placeholder.metric("📈 Packets captured (this session)", st.session_state.total_captured)
+
+                    # Record a throughput sample for this second.
+                    now_sec = int(time.time())
+                    batch_bytes = sum(len(p) for p in pkt_batch)
+                    st.session_state.throughput_samples.append(
+                        {"t": now_sec, "packets": len(pkt_batch), "bytes": batch_bytes}
+                    )
+                    st.session_state.throughput_samples = throughput.trim_samples(
+                        st.session_state.throughput_samples, max_seconds=60, now=now_sec
+                    )
+                    render_throughput()
 
                     windowed_df = packets_to_df(st.session_state.raw_packets)
                     st.session_state.continuous_df = windowed_df.tail(100)
@@ -509,8 +580,41 @@ with tab4:
                 st.caption("Excel export needs `openpyxl` (`pip install openpyxl`).")
 
         st.divider()
+        st.markdown("##### 🌍 Source IP geography")
+        distinct_ips = storage.query_distinct_ips()
+        category_counts = geo.categorize_ips(distinct_ips)
+        if category_counts:
+            cat_df = pd.DataFrame(
+                {"Category": list(category_counts.keys()), "IPs": list(category_counts.values())}
+            )
+            cat_chart = alt.Chart(cat_df).mark_bar().encode(
+                x=alt.X("IPs:Q"),
+                y=alt.Y("Category:N", sort="-x"),
+                color=alt.value("#22D3EE"),
+                tooltip=["Category", "IPs"],
+            ).properties(height=160, title="Distinct source IPs by type")
+            st.altair_chart(cat_chart, width='stretch')
+
+        if geo.geoip_available():
+            locations = geo.resolve_locations(distinct_ips)
+            if locations:
+                map_df = pd.DataFrame(locations).rename(
+                    columns={"latitude": "lat", "longitude": "lon"}
+                )
+                st.map(map_df[["lat", "lon"]])
+                st.caption(f"Mapped {len(locations)} public IP(s) via MaxMind GeoIP.")
+            else:
+                st.caption("No public IPs with a known location in history yet.")
+        else:
+            public_count = category_counts.get("public", 0)
+            st.caption(
+                f"{public_count} public IP(s) seen. Set `GEOIP_DB_PATH` to a MaxMind "
+                "GeoLite2-City `.mmdb` file and install `geoip2` to plot them on a world map."
+            )
+
+        st.divider()
         st.markdown("##### 🔎 Drill down by source IP")
-        ip_options = ["(select an IP)"] + storage.query_distinct_ips()
+        ip_options = ["(select an IP)"] + distinct_ips
         selected_ip = st.selectbox(
             "Source IP", ip_options,
             help="See every past detection for one source IP across all sessions.",
