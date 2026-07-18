@@ -50,18 +50,29 @@ CARD = {
 CHART_HEIGHT = {
     "card_chart": 240,
     "donut": 220,
-    "bar_row_unit": 26,
+    "bar_row_unit": 28,
     "min_bar_chart": 140,
+    # Streamlit's altair_chart(..., width="stretch") fits title/axis/legend
+    # chrome inside the declared height rather than padding beyond it, so a
+    # naive unit*n_rows starves the bars themselves once a chart also has a
+    # title and axis. This is how much of the declared height that chrome
+    # eats before any of it reaches the bars — verified empirically live
+    # (8-category chart at height=208 left only ~40px, not ~208px, for bars).
+    "chrome": 90,
 }
 
 
-def dynamic_height(n_rows, unit=CHART_HEIGHT["bar_row_unit"], minimum=CHART_HEIGHT["min_bar_chart"]):
+def dynamic_height(n_rows, unit=CHART_HEIGHT["bar_row_unit"], minimum=CHART_HEIGHT["min_bar_chart"],
+                    chrome=CHART_HEIGHT["chrome"]):
     """Chart height that grows with category count instead of clipping labels.
 
     A fixed short height on a horizontal bar chart is what causes IP/label
-    rows to overlap once there are more than a handful of categories.
+    rows to overlap once there are more than a handful of categories. `chrome`
+    reserves room for title/axis/legend so the category bands themselves
+    actually get `unit` px each, not `unit` px minus whatever the chart's
+    fixed decoration consumes.
     """
-    return max(minimum, unit * max(n_rows, 1))
+    return max(minimum, chrome + unit * max(n_rows, 1))
 
 
 def nids_chart_theme():
