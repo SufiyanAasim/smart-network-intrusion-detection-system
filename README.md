@@ -4,11 +4,11 @@
 
 # Network Analysis Intrusion System (NIDS)
 
-![version](https://img.shields.io/badge/version-5.0.0-blue)
+![version](https://img.shields.io/badge/version-6.0.0-blue)
 ![license](https://img.shields.io/badge/license-MIT-green)
 ![python](https://img.shields.io/badge/python-3.11%2B-blue)
 
-🚀 **v5.0.0 — Codename: Bulwark**
+🚀 **v6.0.0 — Codename: Aegis**
 
 A Streamlit dashboard that detects network intrusions in real time, comparing
 a **Random Forest**, a **Decision Tree**, and an **Isolation Forest**
@@ -23,11 +23,16 @@ classifier trained on the NSL-KDD dataset — side by side, on the same traffic.
   Isolation Forest anomaly detection, side by side on the same input.
 - 📊 **Visual analytics** — threat distribution, packet-size box plots, volume-vs-size scatter plots.
 - 🤖 **Rule-based summary** — flags likely attacker/victim IPs when threat levels spike.
-- 🔔 **Alerting** — critical-threat notifications via Slack webhook, generic webhook, or email (opt-in via `.env`).
+- 🔔 **Alerting** — critical-threat notifications via Slack webhook, generic webhook, email, plus opt-in
+  in-browser sound and desktop notifications.
 - 📜 **Persistent history** — every detection is saved to SQLite (`data/history.db`), beyond the 100-row live view,
-  with a source filter, an attacks-over-time trend chart, full CSV/Excel export, and per-IP drill-down.
+  with a source filter, an attacks-over-time trend chart, full CSV/Excel export, per-IP drill-down,
+  and a source-IP geography breakdown (optional GeoIP world map).
+- 📶 **Live throughput graph** — real-time packets/sec + KB/sec chart during capture.
+- 📄 **Reports** — export a classified batch as CSV or a formatted PDF summary.
 - ⚙️ **Configurable thresholds** — adjust the CRITICAL/SUSPICIOUS cutoff live via a sidebar slider.
 - 🧠 **Explainable AI tab** — feature-importance charts for RF/DT.
+- 🩺 **Capture readiness** — detects a missing Npcap/libpcap provider and tells you how to fix it.
 
 ## Screenshots
 
