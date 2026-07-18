@@ -1,4 +1,4 @@
-# Desktop executable (NIDS.exe)
+# Desktop executable (Smart Network Intrusion Detection System)
 
 Packages the dashboard as a double-clickable desktop app, so it can be run on
 a machine without a Python install.

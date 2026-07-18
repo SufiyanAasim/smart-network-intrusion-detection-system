@@ -1,0 +1,42 @@
+name: desktop
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-exe:
+    runs-on: windows-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: requirements-dev.txt
+      - name: Install dependencies
+        run: python -m pip install --requirement requirements-dev.txt
+      - name: Build PyInstaller bundle
+        run: python scripts/build_exe.py
+      - name: Verify executable creation
+        run: |
+          if (-not (Test-Path "dist/NIDS/NIDS.exe")) {
+            Write-Error "NIDS.exe was not created in dist/NIDS/"
+            exit 1
+          }
+          Get-Item dist/NIDS/NIDS.exe | Format-List Name, Length

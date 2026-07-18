@@ -26,13 +26,13 @@ persistent history, evidence exports, and a read-only REST API.
 
 ---
 
-**Authors:** [Mohammad Sufiyan Aasim](https://github.com/SufiyanAasim) · [Muhammad Taha Siddiqui](https://github.com/13eeCoder)<br>
+**Authors:** [Mohammad Sufiyan Aasim](https://github.com/SufiyanAasim) (`sufiyanaasim@outlook.com`) · [Muhammad Taha Siddiqui](https://github.com/13eeCoder) (`tahasiddiqui2100@gmail.com`)<br>
 **Latest release:** v11.0.0 — **Cipher** _(Autonomy)_
 
 **Docs:** [Architecture](docs/architecture/architecture.md) · [API](docs/api/api.md) · [Local setup](docs/guides/running-locally.md) · [User guide](docs/guides/user-guide.md) · [Docker & Render](docs/deployment/docker.md) · [Desktop build](docs/deployment/desktop-exe.md) · [Troubleshooting](docs/troubleshooting/troubleshooting.md) · [Release notes](docs/releases/)<br>
 **Community:** [Contributing](CONTRIBUTING.md) · [Security](SECURITY.md) · [Support](SUPPORT.md) · [Roadmap](ROADMAP.md) · [Release process](RELEASE.md) · [Code of Conduct](CODE_OF_CONDUCT.md)
 
-Smart Network Intrusion Detection System (NIDS) is a Python security workspace that
+Smart Network Intrusion Detection System (S-NIDS) is a Python security workspace that
 runs Random Forest, Decision Tree, and Isolation Forest over the same packet
 evidence. It reconstructs the 41-feature NSL-KDD schema, preserves each raw
 model verdict, then adds deterministic consensus triage so an analyst can see
@@ -191,7 +191,7 @@ Full breakdown in [docs/architecture/architecture.md](docs/architecture/architec
 | GeoIP | `geoip2` + MaxMind GeoLite2 (optional) |
 | REST API | stdlib `http.server` — no framework |
 | Desktop build | PyInstaller (folder build + launcher) |
-| Tests | pytest (98) · ruff |
+| Tests | pytest (117) · ruff |
 
 ### Dependencies
 
@@ -384,7 +384,7 @@ network-analysis-intrusion-system/
 | Explainability | RF/DT feature importances identify influential inputs; IF limitations are stated explicitly |
 | Durable evidence | SQLite stores packet-derived fields, all verdicts, source, timestamps, and risk metadata |
 | Defense in depth | Optional login, PBKDF2 hashes, role checks, lockout, API bearer auth, and encrypted backup |
-| Safe response workflow | Firewall commands are suggestions only; NIDS never auto-blocks an address |
+| Safe response workflow | Firewall commands are suggestions only; S-NIDS never auto-blocks an address |
 | Alert fan-out | One cooldown-controlled event can reach Slack, webhook, SMTP, PagerDuty, and Teams |
 | Cloud least privilege | Default container is non-root; raw capture is opt-in and cloud upload analysis remains isolated |
 
@@ -413,7 +413,7 @@ This repository uses Guardian/Security codenames. Full notes live in
 ## 🧪 Testing
 
 ```bash
-pytest -q                          # 107 tests
+pytest -q                          # 117 tests
 ruff check src tests scripts       # lint
 ```
 
@@ -446,14 +446,16 @@ See [SECURITY.md](SECURITY.md) to report a vulnerability.
         <img src="assets/images/contributors/sufiyanaasim.png" width="72" alt="SufiyanAasim"/><br/>
         <sub><b>Mohammad Sufiyan Aasim</b></sub>
       </a><br/>
-      <sub>Data Sciences · AI/ML Ops · SQE</sub>
+      <sub>Data Sciences · AI/ML Ops · SQE</sub><br/>
+      <sub><code>sufiyanaasim@outlook.com</code></sub>
     </td>
     <td align="center">
       <a href="https://github.com/13eeCoder">
         <img src="assets/images/contributors/13eecoder.png" width="72" alt="13eeCoder"/><br/>
         <sub><b>Muhammad Taha Siddiqui</b></sub>
       </a><br/>
-      <sub>Cybersecurity · Networking</sub>
+      <sub>Cybersecurity · Networking</sub><br/>
+      <sub><code>tahasiddiqui2100@gmail.com</code></sub>
     </td>
   </tr>
 </table>
@@ -463,13 +465,13 @@ See [SECURITY.md](SECURITY.md) to report a vulnerability.
 The codebase is split along each maintainer's domain — see
 [.github/CODEOWNERS](.github/CODEOWNERS) for the authoritative per-file map.
 
-| Domain | Modules | Owner |
+| Domain | Modules | Owner & Contact |
 | --- | --- | --- |
-| **Traffic capture & analysis** | `features.py` · `netcheck.py` · `throughput.py` · `geo.py` · `data/pcaps/` | [@13eeCoder](https://github.com/13eeCoder) |
-| **Security controls & response** | `auth.py` · `crypto.py` · `firewall.py` · `alerts.py` · `notify.py` · `SECURITY.md` | [@13eeCoder](https://github.com/13eeCoder) |
-| **Models & data science** | `anomaly.py` · `triage.py` · `scripts/train_models.py` · `models/` · `notebooks/` · `data/nsl-kdd/` | [@SufiyanAasim](https://github.com/SufiyanAasim) |
-| **Dashboard, storage & API** | `app.py` · `storage.py` · `reporting.py` · `api.py` | [@SufiyanAasim](https://github.com/SufiyanAasim) |
-| **MLOps, build & quality** | `.github/workflows/` · `nids.spec` · `scripts/build_exe.py` · `Dockerfile` · `tests/` | [@SufiyanAasim](https://github.com/SufiyanAasim) |
+| **Traffic capture & analysis** | `features.py` · `netcheck.py` · `throughput.py` · `geo.py` · `data/pcaps/` | [@13eeCoder](https://github.com/13eeCoder) (`tahasiddiqui2100@gmail.com`) |
+| **Security controls & response** | `auth.py` · `crypto.py` · `firewall.py` · `alerts.py` · `notify.py` · `SECURITY.md` | [@13eeCoder](https://github.com/13eeCoder) (`tahasiddiqui2100@gmail.com`) |
+| **Models & data science** | `anomaly.py` · `triage.py` · `scripts/train_models.py` · `models/` · `notebooks/` · `data/nsl-kdd/` | [@SufiyanAasim](https://github.com/SufiyanAasim) (`sufiyanaasim@outlook.com`) |
+| **Dashboard, storage & API** | `app.py` · `storage.py` · `reporting.py` · `api.py` | [@SufiyanAasim](https://github.com/SufiyanAasim) (`sufiyanaasim@outlook.com`) |
+| **MLOps, build & quality** | `.github/workflows/` · `nids.spec` · `scripts/build_exe.py` · `Dockerfile` · `tests/` | [@SufiyanAasim](https://github.com/SufiyanAasim) (`sufiyanaasim@outlook.com`) |
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) to get involved.
 

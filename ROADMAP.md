@@ -32,10 +32,10 @@ against the feature quota below.
 | --- | --- | --- |
 | v4.0.0 | Citadel | 1) Configurable CRITICAL/SUSPICIOUS thresholds — 2) History trend chart |
 | v5.0.0 | Bulwark | 1) Full history export (CSV/Excel) — 2) Per-IP drill-down |
-| v6.0.0 | **Aegis** (grand) | 1) GeoIP + attacker map — 2) PDF report export — 3) Real-time throughput graph — 4) Sound/browser alert notification — 5) Npcap install-check banner |
+| v6.0.0 | **Aegis** | 1) GeoIP + attacker map — 2) PDF report export — 3) Real-time throughput graph — 4) Sound/browser alert notification — 5) Npcap install-check banner |
 | v7.0.0 | Bastion | 1) Dashboard auth/login — 2) Auto-block suggestion (firewall rule snippet for a flagged IP) |
-| v8.0.0 | **Phalanx** (grand) | 1) Model-retraining CI pipeline — 2) Multi-user roles/permissions — 3) REST API for detections — 4) Encrypted history-db storage option — 5) Extra alert integrations (PagerDuty/Teams) |
-| v9.0.0 | **Vigil** (grand) | Render deployment · mandatory production auth · lockout protection · cloud-aware capture · branded UI · consensus threat triage |
+| v8.0.0 | **Phalanx** | 1) Model-retraining CI pipeline — 2) Multi-user roles/permissions — 3) REST API for detections — 4) Encrypted history-db storage option — 5) Extra alert integrations (PagerDuty/Teams) |
+| v9.0.0 | **Vigil** | Render deployment · mandatory production auth · lockout protection · cloud-aware capture · branded UI · consensus threat triage |
 | v10.0.0 | **Argus** | Adapter selection · explicit capture scope · role-first authentication · Viewer-only sign-up · professional operations shell |
 | v11.0.0 | **Cipher** | Policy-governed autonomy · correlation · drift signals · approvals · reversible containment · audit trail |
 
@@ -57,7 +57,7 @@ against the feature quota below.
        detections across sessions + a per-IP summary, via
        `storage.query_by_ip()` / `query_ip_summary()` / `query_distinct_ips()`.
 
-## v6.0.0 — Aegis (done, grand release: 5 features)
+## v6.0.0 — Aegis (done, 5 features)
 
 1. [x] **GeoIP + source-IP geography** — IP-type breakdown + optional
        MaxMind world map (`src/nids/geo.py`).
@@ -77,7 +77,7 @@ against the feature quota below.
 2. [x] **Auto-block suggestion** — copy-paste firewall rules for a flagged
        IP (`src/nids/firewall.py`), suggestion-only.
 
-## v8.0.0 — Phalanx (done, grand release: 5 features)
+## v8.0.0 — Phalanx (done, 5 features)
 
 1. [x] **Model-retraining CI pipeline** — `.github/workflows/retrain.yml`.
 2. [x] **Multi-user roles/permissions** — admin/viewer via `NIDS_AUTH_USERS`
@@ -87,13 +87,13 @@ against the feature quota below.
 5. [x] **Extra alert integrations** — PagerDuty + Microsoft Teams
        (`src/nids/alerts.py`).
 
-## v9.0.0 — Vigil (done, grand release: 6 features)
+## v9.0.0 — Vigil (done, 6 features)
 
 1. [x] **Render cloud-deployment configuration** — `render.yaml` blueprint with persistent disk.
 2. [x] **Mandatory production login gate** — auth enforced automatically in production (e.g. on Render) to prevent public security holes.
 3. [x] **Lockout rate-limiting brute-force protection** — 5-attempt limit with a 5-minute lockout in `src/nids/auth.py`.
 4. [x] **Cloud-aware Live Capture** — disables live packet sniffing in cloud/Render environments (showing a warning banner) but retains PCAP upload.
-5. [x] **Brand-customized login screen** — visually customized login UI matching the NIDS color theme.
+5. [x] **Brand-customized login screen** — visually customized login UI matching the S-NIDS color theme.
 6. [x] **Consensus threat triage** — cross-model 0–100 risk scoring, persisted triage queue, and filtered read-only API endpoint.
 
 ## v10.0.0 — Argus (done)

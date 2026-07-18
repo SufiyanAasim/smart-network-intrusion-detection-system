@@ -1,8 +1,8 @@
 # Code ownership — reviews are auto-requested from the owner of each path.
 #
 # The split follows each maintainer's domain:
-#   @SufiyanAasim — Data Science · AI/ML · MLOps · SQE
-#   @13eeCoder    — Networking · Cybersecurity
+#   @SufiyanAasim (Mohammad Sufiyan Aasim <sufiyanaasim@outlook.com>) — Data Science · AI/ML · MLOps · SQE
+#   @13eeCoder (Muhammad Taha Siddiqui <tahasiddiqui2100@gmail.com>)    — Networking · Cybersecurity
 #
 # Later rules win, so the catch-all is first.
 

@@ -17,7 +17,7 @@ inserts `src/` onto `sys.path` at startup, so keep `src/nids/app.py` and
 - You likely lack raw-socket privileges — see [running-locally.md](../guides/running-locally.md#notes).
 - On Windows, `scapy` needs [Npcap](https://npcap.com/) installed. Its default
   access mode permits non-admin capture; if it was installed in admin-only
-  mode, relaunch NIDS as Administrator.
+  mode, relaunch S-NIDS as Administrator.
 - Corporate VPNs/firewalls can block raw capture even when running as admin.
 
 ## Live capture accuracy looks worse than the sidebar number

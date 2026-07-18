@@ -211,8 +211,7 @@ Version numbers follow the milestone scheme documented in [RELEASE.md](RELEASE.m
   `test_auth_roles.py`, `test_alerts_extra.py`).
 
 ### Notes
-- Codename: **Phalanx** (Guardian/Security theme) — the final **grand
-  release** (5 features) of the v3–v8 roadmap. See RELEASE.md.
+- Codename: **Phalanx** (Guardian/Security theme) — the final release (5 features) of the v3–v8 roadmap. See RELEASE.md.
 - New dependency: `cryptography>=42.0` (encrypted backup).
 
 ## [7.0.0] - 2026-07-17
@@ -262,8 +261,7 @@ Version numbers follow the milestone scheme documented in [RELEASE.md](RELEASE.m
   `test_throughput.py`, `test_notify.py`, `test_netcheck.py`).
 
 ### Notes
-- Codename: **Aegis** (Guardian/Security theme) — a **grand release**
-  bundling 5 features, per the locked v4–v8 cadence (see RELEASE.md).
+- Codename: **Aegis** (Guardian/Security theme) — a release bundling 5 features, per the locked v4–v8 cadence (see RELEASE.md).
 - New dependencies: `reportlab>=4.0` (PDF), `geoip2>=4.7` (optional GeoIP).
 
 ## [5.0.0] - 2026-07-17
@@ -346,8 +344,7 @@ Version numbers follow the milestone scheme documented in [RELEASE.md](RELEASE.m
 ### Notes
 - Codename: **Watchtower** (Guardian/Security theme).
 - Starting with v4.0.0, releases follow a fixed cadence: 2 new features per
-  release, except v6.0.0 (Aegis), v8.0.0 (Phalanx) and v9.0.0 (Vigil) which are grand
-  releases bundling 5 new features each. See RELEASE.md.
+  release, except v6.0.0 (Aegis), v8.0.0 (Phalanx) and v9.0.0 (Vigil) which bundle 5 and 6 new features each. See RELEASE.md.
 
 ## [2.0.0] - 2026-07-15
 
