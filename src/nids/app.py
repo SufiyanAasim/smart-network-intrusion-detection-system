@@ -250,6 +250,16 @@ st.markdown(
     .st-key-dashboard_chart_grid > div > [data-testid="stVerticalBlock"] {gap:1rem!important;}
     .st-key-dashboard_chart_grid [data-testid="stHorizontalBlock"] {gap:1rem!important;
       align-items:stretch!important;}
+    /* align-items:stretch equalizes the stColumn height, but stLayoutWrapper
+       (the column's inner content wrapper) defaults to flex-grow:0 and stays
+       at its own content height, leaving a gap instead of the card itself
+       filling the taller column. Force it to grow so the bordered card fills
+       the stretched row height, not just the invisible column around it. */
+    .st-key-dashboard_chart_grid [data-testid="stColumn"] {display:flex!important;}
+    .st-key-dashboard_chart_grid [data-testid="stLayoutWrapper"] {flex:1 1 auto!important;
+      display:flex!important;}
+    .st-key-dashboard_chart_grid [data-testid="stLayoutWrapper"] > [data-testid="stVerticalBlock"] {
+      flex:1 1 auto!important;}
     .st-key-dashboard_triage_card [data-testid="stVerticalBlockBorderWrapper"],
     .st-key-dashboard_model_card [data-testid="stVerticalBlockBorderWrapper"],
     .st-key-dashboard_risk_card [data-testid="stVerticalBlockBorderWrapper"],
@@ -258,11 +268,10 @@ st.markdown(
       border-radius:12px!important;background:rgba(128,128,128,.07)!important;
       padding:.45rem .7rem!important;}
     .st-key-dashboard_triage_card [data-testid="stVerticalBlockBorderWrapper"],
-    .st-key-dashboard_model_card [data-testid="stVerticalBlockBorderWrapper"] {
-      min-height:220px;}
+    .st-key-dashboard_model_card [data-testid="stVerticalBlockBorderWrapper"],
     .st-key-dashboard_risk_card [data-testid="stVerticalBlockBorderWrapper"],
     .st-key-dashboard_sources_card [data-testid="stVerticalBlockBorderWrapper"] {
-      min-height:230px;}
+      min-height:240px;}
     .st-key-dashboard_triage_card [data-testid="stVerticalBlock"],
     .st-key-dashboard_model_card [data-testid="stVerticalBlock"],
     .st-key-dashboard_risk_card [data-testid="stVerticalBlock"],
@@ -1087,15 +1096,18 @@ def render_model_column(df_display, verdict_col, model_name, common_cols):
     # 3. BOX PLOT (Log)
     box_chart = alt.Chart(df_display).mark_boxplot().encode(
         x=alt.X(verdict_col, title=None),
-        y=alt.Y('src_bytes', scale=alt.Scale(type='symlog'), title='Packet size (bytes, log)'),
+        y=alt.Y('src_bytes', scale=alt.Scale(type='symlog'), title='Packet size (bytes, log)',
+                axis=alt.Axis(tickCount=6, format='~s')),
         color=alt.Color(verdict_col, scale=VERDICT_SCALE, legend=None),
     ).properties(height=200, title="Packet size by verdict")
     st.altair_chart(box_chart, width='stretch')
 
     # 4. SCATTER PLOT (Log-Log)
     scatter_chart = alt.Chart(df_display).mark_circle(size=100).encode(
-        x=alt.X('src_bytes', scale=alt.Scale(type='symlog'), title='Packet size (bytes, log)'),
-        y=alt.Y('count', scale=alt.Scale(type='symlog'), title='Traffic count (log)'),
+        x=alt.X('src_bytes', scale=alt.Scale(type='symlog'), title='Packet size (bytes, log)',
+                axis=alt.Axis(tickCount=6, format='~s')),
+        y=alt.Y('count', scale=alt.Scale(type='symlog'), title='Traffic count (log)',
+                axis=alt.Axis(tickCount=6, format='~s')),
         color=alt.Color(verdict_col, scale=VERDICT_SCALE, legend=None),
         tooltip=['src_ip', 'src_bytes', 'count', verdict_col]
     ).properties(height=300, title="Volume vs size").interactive()
@@ -1321,68 +1333,91 @@ def _render_dashboard_analytics(df):
             scale=alt.Scale(domain=triage_order, range=triage_colors),
             legend=alt.Legend(
                 title=None,
-                orient="bottom",
-                direction="horizontal",
-                columns=4,
-                offset=14,
-                labelLimit=110,
-                symbolSize=80,
+                orient="right",
+                symbolSize=50,
+                labelLimit=90,
             ),
         ),
         tooltip=["Triage:N", "Count:Q"],
-    ).properties(height=160, title="Consensus triage mix")
+    ).properties(height=theme.CHART_HEIGHT["donut"], title="Consensus triage mix")
 
+    # Every model gets a row, even if its column is missing from this batch
+    # (model not loaded) rather than silently dropping its bar — "not loaded"
+    # is visually and textually distinct from a genuine 0% attack rate.
     model_rows = []
     for verdict_col, style in MODEL_COLUMN_STYLE.items():
-        if verdict_col in data:
-            model_rows.append({
-                "Model": style["label"],
-                "Attack rate": float((data[verdict_col] == triage.ATTACK_VERDICT).mean() * 100),
-            })
+        loaded = verdict_col in data
+        attack_rate = float((data[verdict_col] == triage.ATTACK_VERDICT).mean() * 100) if loaded else 0.0
+        model_rows.append({
+            "Model": style["label"],
+            "Attack rate": attack_rate,
+            "Loaded": loaded,
+            "Label": f"{attack_rate:.0f}%" if loaded else "not loaded",
+        })
     model_rates = pd.DataFrame(model_rows)
-    model_chart = alt.Chart(model_rates).mark_bar(cornerRadiusEnd=5).encode(
+    model_bar = alt.Chart(model_rates).mark_bar(cornerRadiusEnd=5).encode(
         x=alt.X("Attack rate:Q", title="Flagged as attack (%)", scale=alt.Scale(domain=[0, 100])),
         y=alt.Y("Model:N", title=None, sort=None),
-        color=alt.Color(
-            "Model:N",
-            scale=alt.Scale(
-                domain=["Random Forest", "Decision Tree", "Isolation Forest"],
-                range=[COLOR_RF, COLOR_DT, COLOR_IFOREST],
+        color=alt.condition(
+            alt.datum.Loaded,
+            alt.Color(
+                "Model:N",
+                scale=alt.Scale(
+                    domain=["Random Forest", "Decision Tree", "Isolation Forest"],
+                    range=[COLOR_RF, COLOR_DT, COLOR_IFOREST],
+                ),
+                legend=None,
             ),
-            legend=None,
+            alt.value("rgba(128,128,128,.28)"),
         ),
-        tooltip=["Model:N", alt.Tooltip("Attack rate:Q", format=".1f")],
-    ).properties(height=160, title="Model attack-rate comparison")
+        tooltip=["Model:N", alt.Tooltip("Attack rate:Q", format=".1f"), "Loaded:N"],
+    )
+    model_text = alt.Chart(model_rates).mark_text(align="left", dx=4).encode(
+        x=alt.X("Attack rate:Q"),
+        y=alt.Y("Model:N", sort=None),
+        text="Label:N",
+    )
+    model_chart = (model_bar + model_text).properties(
+        height=theme.CHART_HEIGHT["card_chart"], title="Model attack-rate comparison"
+    )
 
+    # Risk Score is a discrete vote-ratio score (0/33/67/100, or 0/50/100 with
+    # two models) per triage.py, not a continuous measure — binning it into
+    # arbitrary histogram buckets produced mostly-empty bins and an odd
+    # trailing tick. An ordinal axis gives each real value its own bar.
     risk_chart = alt.Chart(data).mark_bar(color=COLOR_DT).encode(
-        x=alt.X("Risk Score:Q", bin=alt.Bin(maxbins=10), title="Consensus risk score"),
-        y=alt.Y("count():Q", title="Observations"),
+        x=alt.X("Risk Score:O", title="Consensus risk score"),
+        y=alt.Y("count():Q", title="Observations", axis=alt.Axis(titleAngle=0, titleAlign="left", titleY=-10)),
         tooltip=[alt.Tooltip("count():Q", title="Observations")],
-    ).properties(height=140, title="Risk-score distribution")
+    ).properties(
+        height=theme.CHART_HEIGHT["card_chart"], title="Risk-score distribution",
+        padding={"right": 20},
+    )
 
+    all_sources = data["src_ip"].nunique() if "src_ip" in data else 0
     source_summary = (
         data.groupby("src_ip", as_index=False)
         .agg(Observations=("src_ip", "size"), **{"Average risk": ("Risk Score", "mean")})
         .sort_values(["Observations", "Average risk"], ascending=False)
         .head(8)
     )
+    # A right-side gradient legend (vs. the old bottom/horizontal one) leaves
+    # more of the chart's declared height available to the category bands
+    # themselves, since Streamlit's altair_chart fits legend+axis+title
+    # chrome inside the declared height rather than padding beyond it.
     source_chart = alt.Chart(source_summary).mark_bar(cornerRadiusEnd=4).encode(
         x=alt.X("Observations:Q", title="Observations"),
-        y=alt.Y("src_ip:N", title=None, sort="-x"),
+        y=alt.Y("src_ip:N", title=None, sort="-x", axis=alt.Axis(labelLimit=100)),
         color=alt.Color(
             "Average risk:Q",
             scale=alt.Scale(domain=[0, 100], range=[COLOR_NORMAL, COLOR_ATTACK]),
             title="Average risk",
-            legend=alt.Legend(
-                orient="bottom",
-                direction="horizontal",
-                gradientLength=160,
-                titleOrient="left",
-                offset=10,
-            ),
+            legend=alt.Legend(orient="right", gradientLength=100),
         ),
         tooltip=["src_ip:N", "Observations:Q", alt.Tooltip("Average risk:Q", format=".1f")],
-    ).properties(height=140, title="Most active source IPs")
+    ).properties(
+        height=theme.dynamic_height(len(source_summary)), title="Most active source IPs"
+    )
 
     with st.container(key="dashboard_chart_grid"):
         chart_left, chart_right = st.columns(2, gap="medium", vertical_alignment="top")
@@ -1400,6 +1435,8 @@ def _render_dashboard_analytics(df):
         with source_right:
             with st.container(border=True, key="dashboard_sources_card"):
                 st.altair_chart(source_chart, width="stretch")
+                if all_sources > 8:
+                    st.caption(f"Showing top 8 of {all_sources} source IPs.")
 
     with st.expander("Recent session evidence"):
         evidence_columns = [
@@ -1932,13 +1969,20 @@ with history_tab:
         st.markdown("##### Attacks over time")
         trend_df = storage.query_trend()
         if len(trend_df) >= 2:
+            trend_value_vars = ["rf_attacks", "dt_attacks"]
+            trend_model_map = {"rf_attacks": "Random Forest", "dt_attacks": "Decision Tree"}
+            trend_domain = ["Random Forest", "Decision Tree"]
+            trend_range = [COLOR_RF, COLOR_DT]
+            if "anomaly_attacks" in trend_df:
+                trend_value_vars.append("anomaly_attacks")
+                trend_model_map["anomaly_attacks"] = "Isolation Forest"
+                trend_domain.append("Isolation Forest")
+                trend_range.append(COLOR_IFOREST)
             trend_long = trend_df.melt(
-                id_vars=["bucket"], value_vars=["rf_attacks", "dt_attacks"],
+                id_vars=["bucket"], value_vars=trend_value_vars,
                 var_name="Model", value_name="Attacks",
             )
-            trend_long["Model"] = trend_long["Model"].map(
-                {"rf_attacks": "Random Forest", "dt_attacks": "Decision Tree"}
-            )
+            trend_long["Model"] = trend_long["Model"].map(trend_model_map)
             # Real temporal axis: a nominal ("bucket:N") axis rendered one
             # crowded tick per minute and became unreadable as history grew.
             trend_long["bucket"] = pd.to_datetime(trend_long["bucket"], utc=True, errors="coerce")
@@ -1947,7 +1991,7 @@ with history_tab:
                 y=alt.Y("Attacks:Q", title="Attacks flagged"),
                 color=alt.Color(
                     "Model:N", title=None,
-                    scale=alt.Scale(domain=["Random Forest", "Decision Tree"], range=[COLOR_RF, COLOR_DT]),
+                    scale=alt.Scale(domain=trend_domain, range=trend_range),
                 ),
                 tooltip=[alt.Tooltip("bucket:T", title="Time"), "Model:N", "Attacks:Q"],
             ).properties(height=250)
