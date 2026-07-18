@@ -8,3 +8,4 @@ altair>=5.0
 openpyxl>=3.1
 reportlab>=4.0
 geoip2>=4.7
+cryptography>=42.0
