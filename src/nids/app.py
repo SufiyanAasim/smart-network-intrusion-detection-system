@@ -39,8 +39,13 @@ import altair as alt  # noqa: E402
 import time  # noqa: E402
 
 from nids.features import MODEL_FEATURES, WINDOW_CONNECTIONS, preprocess_data, packets_to_df  # noqa: E402
-from nids import storage, alerts, anomaly, geo, reporting, throughput, notify, netcheck, auth, firewall, crypto, triage, autonomy  # noqa: E402
+from nids import storage, alerts, anomaly, geo, reporting, throughput, notify, netcheck, auth, firewall, crypto, triage, autonomy, theme  # noqa: E402
 from nids import __version__ as NIDS_VERSION  # noqa: E402
+
+# Registers the shared "nids" Altair theme (axis/legend/title styling) so
+# every chart in the app inherits consistent styling. Must run at module
+# load, before any alt.Chart(...) is built.
+theme.register()
 
 # Raw packets kept in session_state for live capture, so packets_to_df can
 # compute a real trailing window instead of a single-packet snapshot.
@@ -79,12 +84,13 @@ LIVE_REFRESH_SECONDS = _env_float("LIVE_REFRESH_SECONDS", 2.5, 0.5, 10.0)
 MAX_PCAP_UPLOAD_MB = _env_int("MAX_PCAP_UPLOAD_MB", 50, 1, 200)
 
 # One palette for the whole app, so a model reads as the same colour in the
-# sidebar, its results column, and the Explainable AI charts.
-COLOR_NORMAL = "#00CC96"
-COLOR_ATTACK = "#EF553B"
-COLOR_RF = "#00CC96"
-COLOR_DT = "#FFB84C"
-COLOR_IFOREST = "#22D3EE"
+# sidebar, its results column, and the Explainable AI charts. Values live in
+# nids.theme.COLOR so future charts/screens share the same source of truth.
+COLOR_NORMAL = theme.COLOR["normal"]
+COLOR_ATTACK = theme.COLOR["attack"]
+COLOR_RF = theme.COLOR["rf"]
+COLOR_DT = theme.COLOR["dt"]
+COLOR_IFOREST = theme.COLOR["iforest"]
 VERDICT_SCALE = alt.Scale(domain=[triage.NORMAL_VERDICT, triage.ATTACK_VERDICT], range=[COLOR_NORMAL, COLOR_ATTACK])
 
 # --- 1. Page Configuration ---
