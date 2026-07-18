@@ -1,33 +1,38 @@
 # Release Process
 
-## Versioning
+## Versioning (this project's scheme)
 
-Semantic Versioning (`MAJOR.MINOR.PATCH`), plus pre-release identifiers
-during the run-up to a stable release:
+This project uses major-version milestones rather than strict semver
+breaking-change semantics:
 
 ```
-1.0.0-alpha.1   pre-release, unstable, naming/scope still open
-1.0.0-beta.1    feature-complete, stabilizing
-1.0.0-rc.1      release candidate
-1.0.0           first stable release
+v1.0.0   pre-release — repo restructure, docs, CI, test scaffolding
+v2.0.0   stable release — the working dashboard as it stands today
+v3.0.0+  active feature development going forward
 ```
 
-- **Major** — breaking changes (feature schema, model I/O contract, CLI/API).
+Within each major milestone, standard `MINOR.PATCH` rules still apply:
 - **Minor** — new functionality, backward compatible.
 - **Patch** — bug fixes only.
+- Pre-release identifiers (`-alpha.1`, `-beta.1`, `-rc.1`) are used before a
+  major milestone is cut stable.
 
 ## Release naming
 
-Each stable release gets a codename from one theme (chosen once, not mixed).
-Format:
+Theme: **Guardian / Security**. Each stable release gets a codename from
+this theme only (never mixed with another theme). Format:
 
 ```
 🚀 NIDS vX.Y.Z
 Codename: <Theme Name> — <Title>
 ```
 
-The codename/title for v1.0.0 is not finalized yet — tracked in
-[docs/releases/](docs/releases/).
+| Version | Codename | Title |
+| --- | --- | --- |
+| v1.0.0-alpha.1 | Sentinel | Foundation |
+| v2.0.0 | Vanguard | Baseline |
+
+Future candidates from the same theme: Aegis, Warden, Bastion, Watchtower, Cipher, Shield.
 
 ## Branch flow
 

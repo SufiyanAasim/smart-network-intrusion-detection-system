@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [2.0.0] - 2026-07-15
+
+### Added
+- Nothing new functionally — this tag marks the current working IDS dashboard
+  (live capture, pcap upload, dual-model comparison, explainable AI) as the
+  first stable release, on top of the v1.0.0 pre-release restructuring.
+
+### Notes
+- v1.0.0 was the pre-release (repo restructuring, docs, CI, tests).
+- v2.0.0 is the stable baseline for where the project stands today.
+- v3.0.0 is where new feature work begins (see ROADMAP.md).
+
 ## [1.0.0-alpha.1] - 2026-07-15
 
 ### Added
