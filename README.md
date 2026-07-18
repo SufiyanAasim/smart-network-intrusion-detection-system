@@ -220,8 +220,8 @@ Build it with `python scripts/build_exe.py`, or see [docs/deployment/desktop-exe
 ### Clone and run from source
 
 ```bash
-git clone https://github.com/SufiyanAasim/network-analysis-intrusion-system.git
-cd network-analysis-intrusion-system
+git clone https://github.com/SufiyanAasim/smart-network-intrusion-detection-system.git
+cd smart-network-intrusion-detection-system
 python -m venv .venv && source .venv/bin/activate   # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 ```
@@ -313,7 +313,7 @@ runtime assets into the image. See [Docker and Render deployment](docs/deploymen
 ## 🗂️ Project Structure
 
 ```
-network-analysis-intrusion-system/
+smart-network-intrusion-detection-system/
 ├── .github/                # Issue/PR templates, CI (lint · test · container · retrain)
 ├── assets/images/          # Canonical logo.png (app/docs) · generated logo.ico (exe)
 ├── config/                 # Feature schema reference
