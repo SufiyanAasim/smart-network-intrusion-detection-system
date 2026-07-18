@@ -4,6 +4,8 @@
 
 | Version | Supported |
 | ------- | --------- |
+| 11.x | ✅ |
+| 10.x | ✅ |
 | 7.x | ✅ |
 | 3.x – 6.x | ✅ |
 | < 3.0 | ❌ |
@@ -50,8 +52,9 @@ Expect an acknowledgement within a few days.
 ## Auto-block suggestions
 
 - The "Suggested block rules" feature only *displays* firewall commands for
-  an operator to review and run manually. The application never executes
-  them, opens privileged sockets, or modifies firewall/system state.
+  an operator to review and run manually. That feature never executes them.
+  Cipher v11's separate autonomy control plane can apply a validated temporary
+  rule only when server-side execution is explicitly enabled.
 
 ## Roles, REST API, and encrypted backup (v8.0.0)
 
@@ -67,3 +70,11 @@ Expect an acknowledgement within a few days.
   `NIDS_DB_ENCRYPTION_KEY`. This protects the *exported backup file* at
   rest; the live `data/history.db` itself is still plaintext SQLite. Store
   the key separately from the backups.
+## Autonomous response boundary
+
+Cipher v11 defaults to Shadow mode with host execution disabled. Treat
+`NIDS_AUTONOMY_EXECUTE=true` as privileged production configuration: validate
+Approval-mode evidence first, run the sensor with least privilege, keep private
+sources protected unless explicitly required, preserve the audit database, and
+test TTL rollback on a non-production network. UI mode selection alone cannot
+enable host commands.

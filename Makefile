@@ -20,7 +20,7 @@ train:
 	python scripts/train_models.py
 
 docker-build:
-	docker build --pull -t nids:10.0.0 -t nids:latest .
+	docker build --pull -t nids:11.0.0 -t nids:latest .
 
 docker-config:
 	docker compose --profile api --profile capture config --quiet
