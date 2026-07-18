@@ -4,10 +4,15 @@ Kept free of Streamlit imports so it can be unit tested and reused
 (e.g. by a training script) without a Streamlit runtime.
 """
 
-from collections import Counter
-
 import pandas as pd
 from scapy.all import IP, TCP, UDP
+
+# NSL-KDD's "count"/"srv_count" style features are defined over the trailing
+# 2 seconds and the most recent 100 connections. We approximate that here
+# using each packet's own capture timestamp against the other packets passed
+# into packets_to_df, rather than a single hardcoded value.
+WINDOW_SECONDS = 2.0
+WINDOW_CONNECTIONS = 100
 
 MODEL_FEATURES = [
     'duration', 'protocol_type', 'service', 'flag', 'src_bytes', 'dst_bytes',
@@ -56,49 +61,75 @@ def _get_flag(pkt):
     return 'SF'
 
 
+def _is_error(pkt):
+    if pkt.haslayer(TCP):
+        flags = pkt[TCP].flags
+        if 'S' in flags and 'A' not in flags:
+            return True
+        if 'R' in flags:
+            return True
+    return False
+
+
 def packets_to_df(packets):
-    """Convert a scapy packet list into a DataFrame shaped like NSL-KDD records."""
+    """Convert a scapy packet list into a DataFrame shaped like NSL-KDD records.
+
+    `count`/`srv_count`/`*serror_rate`/`*same_srv_rate` are computed from a
+    trailing window (<=WINDOW_SECONDS old, <=WINDOW_CONNECTIONS packets) of
+    packets to the same destination IP, ordered by capture timestamp — not a
+    static value — so they reflect actual recent traffic to that host.
+    """
+    ip_packets = [pkt for pkt in packets if pkt.haslayer(IP)]
+    if not ip_packets:
+        return pd.DataFrame()
+
+    ip_packets = sorted(ip_packets, key=lambda p: float(p.time))
+
     captured_data = []
-    dst_ip_counts = Counter()
-    error_counts = Counter()
+    for idx, pkt in enumerate(ip_packets):
+        now = float(pkt.time)
+        dst_ip = pkt[IP].dst
+        service = _get_service(pkt)
 
-    for pkt in packets:
-        if pkt.haslayer(IP):
-            dst_ip_counts[pkt[IP].dst] += 1
-        is_error = False
-        if pkt.haslayer(TCP):
-            if 'S' in pkt[TCP].flags and 'A' not in pkt[TCP].flags:
-                is_error = True
-            if 'R' in pkt[TCP].flags:
-                is_error = True
-        if is_error and pkt.haslayer(IP):
-            error_counts[pkt[IP].dst] += 1
+        window = [
+            p for p in ip_packets[max(0, idx - WINDOW_CONNECTIONS + 1):idx + 1]
+            if now - float(p.time) <= WINDOW_SECONDS
+        ]
+        same_host = [p for p in window if p[IP].dst == dst_ip]
+        same_host_srv = [p for p in same_host if _get_service(p) == service]
 
-    for pkt in packets:
-        if not pkt.haslayer(IP):
-            continue
+        count = len(same_host)
+        srv_count = len(same_host_srv)
+        error_count = sum(1 for p in same_host if _is_error(p))
+        srv_error_count = sum(1 for p in same_host_srv if _is_error(p))
+
+        serror_rate = error_count / count if count else 0.0
+        srv_serror_rate = srv_error_count / srv_count if srv_count else 0.0
+        same_srv_rate = srv_count / count if count else 0.0
+        diff_srv_rate = 1.0 - same_srv_rate
 
         row = {col: 0 for col in MODEL_FEATURES}
         row['src_ip'] = pkt[IP].src
-        row['dst_ip'] = pkt[IP].dst
+        row['dst_ip'] = dst_ip
         row['protocol_type'] = 'tcp' if pkt.haslayer(TCP) else 'udp' if pkt.haslayer(UDP) else 'icmp'
-        row['service'] = _get_service(pkt)
+        row['service'] = service
         row['flag'] = _get_flag(pkt)
         row['src_bytes'] = len(pkt[IP].payload)
 
-        count = dst_ip_counts[pkt[IP].dst]
         row['count'] = count
-        row['srv_count'] = count
+        row['srv_count'] = srv_count
         row['dst_host_count'] = count
-        row['dst_host_srv_count'] = count
+        row['dst_host_srv_count'] = srv_count
 
-        error_count = error_counts[pkt[IP].dst]
-        error_rate = error_count / count if count > 0 else 0
+        row['serror_rate'] = serror_rate
+        row['srv_serror_rate'] = srv_serror_rate
+        row['dst_host_serror_rate'] = serror_rate
+        row['dst_host_srv_serror_rate'] = srv_serror_rate
 
-        row['serror_rate'] = error_rate
-        row['dst_host_serror_rate'] = error_rate
-        row['same_srv_rate'] = 1.0
-        row['dst_host_same_srv_rate'] = 1.0
+        row['same_srv_rate'] = same_srv_rate
+        row['diff_srv_rate'] = diff_srv_rate
+        row['dst_host_same_srv_rate'] = same_srv_rate
+        row['dst_host_diff_srv_rate'] = diff_srv_rate
 
         captured_data.append(row)
 

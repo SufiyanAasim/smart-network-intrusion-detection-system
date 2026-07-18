@@ -30,3 +30,7 @@ Thumbs.db
 
 # Large / generated artifacts (tracked separately, not via git history churn)
 *.pcapng
+
+# Runtime-generated detection history (SQLite)
+data/history.db
+data/*.db-journal
