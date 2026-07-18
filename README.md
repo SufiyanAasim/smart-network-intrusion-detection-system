@@ -1,8 +1,10 @@
 # Network Analysis Intrusion System (NIDS)
 
-![version](https://img.shields.io/badge/version-1.0.0--alpha.1-blue)
+![version](https://img.shields.io/badge/version-2.0.0-blue)
 ![license](https://img.shields.io/badge/license-MIT-green)
 ![python](https://img.shields.io/badge/python-3.11%2B-blue)
+
+🚀 **v2.0.0 — Codename: Vanguard — Baseline**
 
 A Streamlit dashboard that detects network intrusions in real time, comparing
 a **Random Forest** and a **Decision Tree** classifier trained on the
