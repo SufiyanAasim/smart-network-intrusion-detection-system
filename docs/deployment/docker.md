@@ -1,6 +1,6 @@
-# Docker and Render deployment
+# Docker and Docker Compose deployment
 
-NIDS v11.0.0 uses one hardened image for the Streamlit dashboard and the
+S-NIDS v11.0.0 uses one hardened image for the Streamlit dashboard and the
 read-only REST API. The default Compose service runs without Linux capabilities;
 raw host capture is isolated behind an explicit Linux-only profile.
 

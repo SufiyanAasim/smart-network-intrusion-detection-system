@@ -59,7 +59,7 @@ def alert_html(message, play_sound=True, browser_notification=True, nonce=""):
             "<script>"
             "(function(){"
             "if(!('Notification' in window))return;"
-            "function show(){new Notification('NIDS: Critical threat',"
+            "function show(){new Notification('S-NIDS: Critical threat',"
             f'{{body:{safe_message}}});}}'
             "if(Notification.permission==='granted'){show();}"
             "else if(Notification.permission!=='denied'){"

@@ -429,7 +429,7 @@ def show_about_dialog():
     _dialog_brand_header()
     st.markdown(
         f"""
-        **NIDS v{NIDS_VERSION}** compares Random Forest, Decision Tree, and
+        **S-NIDS v{NIDS_VERSION}** compares Random Forest, Decision Tree, and
         optional Isolation Forest analysis on the same live or uploaded
         traffic, then adds consensus risk triage and persistent evidence.
 
@@ -521,7 +521,7 @@ def render_credits():
             ):
                 show_about_dialog()
         with col_lic:
-            st.caption("MIT Licence · © 2026 NIDS Contributors · Smart Network Intrusion Detection System")
+            st.caption("MIT Licence · © 2026 S-NIDS Contributors · Smart Network Intrusion Detection System")
 
 
 def _require_login():
@@ -538,14 +538,14 @@ def _require_login():
         st.stop()
     if not auth.is_auth_configured() and not auth.signup_enabled():
         if os.environ.get("RENDER"):
-            st.error("Security alert: `NIDS_AUTH_PASSWORD_HASH` is not set. Configure a password hash before running NIDS on Render.")
+            st.error("Security alert: `NIDS_AUTH_PASSWORD_HASH` is not set. Configure a password hash before running S-NIDS on Render.")
             st.stop()
         return
     if st.session_state.get("authenticated"):
         return
 
     logo = (
-        f'<img class="nids-auth-logo" src="data:image/png;base64,{_logo_b64}" alt="NIDS logo"/>'
+        f'<img class="nids-auth-logo" src="data:image/png;base64,{_logo_b64}" alt="S-NIDS logo"/>'
         if _logo_b64 else ""
     )
     st.markdown(
@@ -772,7 +772,7 @@ def render_product_hero():
     """Render the full product identity only where deliberate branding is useful."""
     hero_logo = (
         f'<img class="nids-hero-logo" src="data:image/png;base64,{_logo_b64}" '
-        'alt="NIDS logo"/>' if _logo_b64 else ""
+        'alt="S-NIDS logo"/>' if _logo_b64 else ""
     )
     st.markdown(
         f"""<div class="nids-hero" style="display:flex;align-items:center;gap:20px">
@@ -859,7 +859,7 @@ rf_model, dt_model, iforest_model, encoders, rf_acc, dt_acc, iforest_acc = load_
 if _logo_b64:
     st.sidebar.markdown(
         f'<div class="nids-sidebar-brand"><img src="data:image/png;base64,{_logo_b64}" '
-        'alt="Smart NIDS logo"/><strong>SMART NIDS</strong></div>',
+        'alt="S-NIDS logo"/><strong>S-NIDS</strong></div>',
         unsafe_allow_html=True,
     )
 
@@ -963,7 +963,7 @@ def render_block_suggestions(ip):
     if not rules:
         return
     with st.expander(f"Suggested block rules for {ip}"):
-        st.caption("Review before applying — NIDS never runs these for you.")
+        st.caption("Review before applying — S-NIDS never runs these for you.")
         for tool, command in rules.items():
             st.markdown(f"**{tool}**")
             st.code(command, language="bash")
@@ -1564,7 +1564,7 @@ with live_tab:
             )
 
     st.info(
-        "**Capture scope — this device:** NIDS sees traffic available to the selected adapter "
+        "**Capture scope — this device:** S-NIDS sees traffic available to the selected adapter "
         "(this computer's traffic plus visible broadcast/multicast). For whole-LAN visibility, "
         "mirror switch traffic with SPAN, use a network TAP, or run the sensor on the gateway/router."
     )
@@ -2132,7 +2132,7 @@ with credits_tab:
 st.markdown(
     f'<footer class="nids-footer"><span>{PRODUCT_NAME} · v{NIDS_VERSION} '
     f'({RELEASE_CODENAME})</span><span>Local capture respects adapter visibility · '
-    '<a href="https://github.com/SufiyanAasim/network-analysis-intrusion-system" '
+    '<a href="https://github.com/SufiyanAasim/smart-network-intrusion-detection-system" '
     'target="_blank">GitHub</a></span></footer>',
     unsafe_allow_html=True,
 )

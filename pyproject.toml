@@ -1,3 +1,15 @@
+[project]
+name = "nids"
+version = "11.0.0"
+description = "Smart Network Intrusion Detection System — Multi-model network intrusion detection, triage, and autonomous response workspace"
+readme = "README.md"
+requires-python = ">=3.11"
+license = {text = "MIT"}
+authors = [
+    {name = "Mohammad Sufiyan Aasim", email = "sufiyanaasim@outlook.com"},
+    {name = "Muhammad Taha Siddiqui", email = "tahasiddiqui2100@gmail.com"},
+]
+
 [tool.pytest.ini_options]
 pythonpath = ["src"]
 testpaths = ["tests"]

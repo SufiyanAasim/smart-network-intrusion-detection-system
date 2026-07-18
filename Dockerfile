@@ -8,7 +8,7 @@ FROM python:${PYTHON_VERSION}-slim-bookworm
 LABEL org.opencontainers.image.title="Smart Network Intrusion Detection System" \
       org.opencontainers.image.description="Policy-governed autonomous network intrusion detection" \
       org.opencontainers.image.version="11.0.0" \
-      org.opencontainers.image.source="https://github.com/SufiyanAasim/network-analysis-intrusion-system" \
+      org.opencontainers.image.source="https://github.com/SufiyanAasim/smart-network-intrusion-detection-system" \
       org.opencontainers.image.licenses="MIT"
 
 ENV HOME=/home/nids \

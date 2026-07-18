@@ -33,11 +33,11 @@ def test_current_release_metadata_is_consistent():
     assert f"docs/releases/v{version}.md" in readme
 
     current_release = _read(f"docs/releases/v{version}.md")
-    assert current_release.startswith(f"# ⚡ NIDS v{version}\n")
+    assert current_release.startswith(f"# ⚡ Smart Network Intrusion Detection System v{version}\n")
     assert "> Codename **Cipher**" in current_release
     assert "> Codename **Argus**" in _read("docs/releases/v10.0.0.md")
     assert "> Codename **Vigil**" in _read("docs/releases/v9.0.0.md")
-    assert f"NIDS v{version} uses" in _read("docs/deployment/docker.md")
+    assert f"S-NIDS v{version} uses" in _read("docs/deployment/docker.md")
     assert f'"version":"{version}"' in _read("docs/api/api.md")
 
 

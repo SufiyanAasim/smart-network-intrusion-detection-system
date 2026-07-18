@@ -38,3 +38,9 @@ pytest -q
 
 `feature/*` → `develop` → `release/vX.Y.Z` → `main` → tag `vX.Y.Z`.
 See [RELEASE.md](RELEASE.md).
+
+## Maintainers & Code Division
+
+The project code is divided by maintainer expertise:
+- **Mohammad Sufiyan Aasim** ([@SufiyanAasim](https://github.com/SufiyanAasim) · `sufiyanaasim@outlook.com`): Data Science, ML Models (`models/`, `train_models.py`, `anomaly.py`), Dashboard (`app.py`), Triage & Consensus (`triage.py`), Storage & API (`storage.py`, `api.py`), Reporting (`reporting.py`), and MLOps/CI/Builds.
+- **Muhammad Taha Siddiqui** ([@13eeCoder](https://github.com/13eeCoder) · `tahasiddiqui2100@gmail.com`): Networking & Packet Capture (`features.py`, `netcheck.py`, `throughput.py`, `geo.py`), Security & Access Controls (`auth.py`, `crypto.py`), Alerting & Notifications (`alerts.py`, `notify.py`), and Containment/Firewall (`firewall.py`).

@@ -42,7 +42,7 @@ def _top_ips(df, verdict_col, ip_col="src_ip", limit=5):
     return list(attacks[ip_col].value_counts().head(limit).items())
 
 
-def build_report_pdf(df_display, title="NIDS Detection Report", generated_at=None):
+def build_report_pdf(df_display, title="S-NIDS Detection Report", generated_at=None):
     """Render a one-page PDF summary of a classified batch to bytes.
 
     `df_display` is expected to have the RF/DT verdict columns produced by
