@@ -17,10 +17,23 @@ def test_hash_uses_random_salt():
     assert auth.hash_password("same") != auth.hash_password("same")
 
 
+def test_hash_accepts_numeric_iteration_string_and_validates_salt():
+    stored = auth.hash_password("same", iterations="260000", salt=b"a" * 16)
+    assert auth.verify_password("same", stored) is True
+
+
+def test_hash_rejects_empty_password():
+    import pytest
+
+    with pytest.raises(ValueError, match="empty"):
+        auth.hash_password("")
+
+
 def test_verify_password_rejects_malformed_hash():
     assert auth.verify_password("x", "") is False
     assert auth.verify_password("x", "not-a-valid-hash") is False
     assert auth.verify_password("x", "md5$1$aa$bb") is False
+    assert auth.verify_password("x", "pbkdf2_sha256$999999999$" + "aa" * 16 + "$" + "bb" * 32) is False
 
 
 def test_is_auth_configured(monkeypatch):

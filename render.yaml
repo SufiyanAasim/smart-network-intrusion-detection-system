@@ -1,0 +1,34 @@
+services:
+  - type: web
+    name: nids-dashboard
+    runtime: docker
+    plan: starter
+    branch: main
+    dockerfilePath: ./Dockerfile
+    autoDeployTrigger: checksPass
+    healthCheckPath: /_stcore/health
+    maxShutdownDelaySeconds: 30
+    envVars:
+      # Render deployments fail closed when this secret is not configured.
+      - key: NIDS_AUTH_PASSWORD_HASH
+        sync: false
+      - key: NIDS_AUTH_USERNAME
+        value: admin
+      - key: NIDS_SIGNUP_ENABLED
+        value: "false"
+      - key: NIDS_AUTH_DB_PATH
+        value: /data/auth.db
+      - key: NIDS_DB_PATH
+        value: /data/history.db
+      - key: MAX_PCAP_UPLOAD_MB
+        value: "50"
+      - key: ALERT_COOLDOWN_SECONDS
+        value: "60"
+      - key: CRITICAL_THRESHOLD_PCT
+        value: "20"
+    # Persistent disks require a paid Render instance; `starter` is therefore
+    # deliberate. A free instance would lose SQLite history on every restart.
+    disk:
+      name: nids-history-data
+      mountPath: /data
+      sizeGB: 1

@@ -11,6 +11,7 @@ Kept free of Streamlit imports so it can be unit tested directly.
 
 import base64
 import io
+import json
 import math
 import struct
 import wave
@@ -47,7 +48,7 @@ def alert_html(message, play_sound=True, browser_notification=True, nonce=""):
     the JS runs again (identical HTML would be deduplicated). No-op branches
     are omitted so a disabled channel produces no code.
     """
-    safe_message = message.replace("\\", "\\\\").replace('"', '\\"').replace("\n", " ")
+    safe_message = json.dumps(str(message).replace("\n", " ")).replace("<", "\\u003c")
     parts = [f'<!-- nonce:{nonce} -->']
 
     if play_sound:
@@ -59,7 +60,7 @@ def alert_html(message, play_sound=True, browser_notification=True, nonce=""):
             "(function(){"
             "if(!('Notification' in window))return;"
             "function show(){new Notification('NIDS: Critical threat',"
-            f'{{body:"{safe_message}"}});}}'
+            f'{{body:{safe_message}}});}}'
             "if(Notification.permission==='granted'){show();}"
             "else if(Notification.permission!=='denied'){"
             "Notification.requestPermission().then(function(p){"

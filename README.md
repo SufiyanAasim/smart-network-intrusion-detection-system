@@ -1,25 +1,52 @@
 <div align="center">
 
-<img src="assets/images/logo.svg" alt="NIDS Logo" width="110" />
+<img src="assets/images/logo.png" alt="Network Intrusion Detection System shield" width="176">
 
-# Network Analysis Intrusion System
+# Network Intrusion Detection System
 
-**A Streamlit intrusion-detection dashboard that runs three ML models against the same live or captured traffic — side by side**
+### A multi-model network intrusion detection, triage, and response workspace
 
 [![Python 3.11](https://img.shields.io/badge/Python-3.11%2B-3776ab?style=flat&logo=python&logoColor=white)](docs/guides/running-locally.md)
-[![Version](https://img.shields.io/badge/version-8.0.0%20Cipher-8b5cf6?style=flat)](docs/releases/v8.0.0.md)
+[![Version](https://img.shields.io/badge/version-10.0.0-blue?style=flat)](docs/releases/v10.0.0.md)
+[![Release](https://img.shields.io/badge/release-Cipher%20%E2%80%94%20Capture%2C%20Control%20%26%20Verify-8A2BE2?style=flat)](docs/releases/v10.0.0.md)
 [![License: MIT](https://img.shields.io/badge/License-MIT-22c55e?style=flat)](LICENSE)
-[![Platform](https://img.shields.io/badge/platform-Windows%20%C2%B7%20Linux%20%C2%B7%20macOS-64748b?style=flat)]()
-[![Tests](https://img.shields.io/badge/tests-84%20passing-16a34a?style=flat)](tests/)
+[![UI](https://img.shields.io/badge/UI-Streamlit-FF4B4B?style=flat&logo=streamlit&logoColor=white)](src/nids/app.py)
+[![ML](https://img.shields.io/badge/ML-scikit--learn-F7931E?style=flat&logo=scikitlearn&logoColor=white)](scripts/train_models.py)
+[![Platform](https://img.shields.io/badge/platform-Windows%20%C2%B7%20Linux%20%C2%B7%20macOS-64748b?style=flat)](docs/guides/running-locally.md)
+[![Tests](https://img.shields.io/badge/tests-109%20passing-16a34a?style=flat)](tests/)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-0ea5e9?style=flat)](CONTRIBUTING.md)
 
-Sniff live packets or drop in a Wireshark capture, and watch Random Forest, Decision Tree and Isolation Forest disagree in real time — with alerting, history and a REST API.
+Inspect live traffic or drop in a Wireshark capture, compare three model verdicts,
+and turn model disagreement into an explainable operator queue — with alerting,
+persistent history, evidence exports, and a read-only REST API.
 
 [**Desktop .exe**](docs/deployment/desktop-exe.md) · [**Changelog**](CHANGELOG.md) · [**Roadmap**](ROADMAP.md) · [**Report a Bug**](.github/ISSUE_TEMPLATE/bug_report.md)
 
 </div>
 
 ---
+
+**Authors:** [Mohammad Sufiyan Aasim](https://github.com/SufiyanAasim) · [Muhammad Taha Siddiqui](https://github.com/13eeCoder)<br>
+**Latest release:** v10.0.0 — **Cipher** _(Capture, Control & Verify)_
+
+**Docs:** [Architecture](docs/architecture/architecture.md) · [API](docs/api/api.md) · [Local setup](docs/guides/running-locally.md) · [User guide](docs/guides/user-guide.md) · [Docker & Render](docs/deployment/docker.md) · [Desktop build](docs/deployment/desktop-exe.md) · [Troubleshooting](docs/troubleshooting/troubleshooting.md) · [Release notes](docs/releases/)<br>
+**Community:** [Contributing](CONTRIBUTING.md) · [Security](SECURITY.md) · [Support](SUPPORT.md) · [Roadmap](ROADMAP.md) · [Release process](RELEASE.md) · [Code of Conduct](CODE_OF_CONDUCT.md)
+
+Network Intrusion Detection System (NIDS) is a Python security workspace that
+runs Random Forest, Decision Tree, and Isolation Forest over the same packet
+evidence. It reconstructs the 41-feature NSL-KDD schema, preserves each raw
+model verdict, then adds deterministic consensus triage so an analyst can see
+what needs attention first without losing the evidence behind the score.
+
+**v10.0.0 makes local operation explicit and verifiable:** choose the exact
+capture adapter, understand device-versus-LAN visibility before starting, use
+role-first sign-in and Viewer registration, and work from a compact professional
+shell with first-class Credits, top-bar notifications, and consistent evidence.
+
+> [!IMPORTANT]
+> This is a research and portfolio system built around the NSL-KDD benchmark.
+> Use its verdicts as decision support—not as a substitute for a production IDS,
+> packet-forensic review, or a current threat-intelligence platform.
 
 ## ✨ Features
 
@@ -33,6 +60,10 @@ Sniff live packets or drop in a Wireshark capture, and watch Random Forest, Deci
 - Real-time scapy sniffing with a **true trailing 2-second / 100-connection window** for `count`, `srv_count` and the `*_rate` features — not a per-packet snapshot
 - Live packets/sec + KB/sec throughput chart over a rolling 60-second window
 - Capture-readiness detection: warns about a missing **Npcap** driver on Windows instead of silently capturing nothing
+- Explicit **capture-interface selector** for Ethernet, Wi-Fi, VPN, and virtual adapters
+- In-app capture-scope guidance: local adapters see this device's visible traffic; whole-LAN monitoring requires SPAN/port mirroring, a TAP, or a gateway sensor
+- Calmer 2.5-second dashboard refresh cadence; Stop only pauses intake and never prepares or downloads a report
+- Live CSV, PDF, and Print controls appear only after the explicit **Prepare report exports** action
 
 ### 📂 Pcap Upload
 - Drop a `.pcap`/`.pcapng` from Wireshark and get an instant classified report
@@ -45,22 +76,55 @@ Sniff live packets or drop in a Wireshark capture, and watch Random Forest, Deci
 ### 🔔 Alerting
 - **Slack**, generic **webhook**, **email** (SMTP), **PagerDuty** (Events API v2) and **Microsoft Teams**
 - Opt-in in-browser **beep** (synthesized at runtime — no audio asset) and **desktop notification**
+- Notification preferences live beside Deploy so alert controls stay available without extending the sidebar
 - Cooldown-throttled per model so a sustained attack can't spam every rerun
 
 ### 📜 Persistent History & Analytics
 - Every detection persisted to SQLite, far beyond the 100-row live view
 - Attacks-over-time trend chart, source filter, and **per-IP drill-down** across sessions
 - **Source-IP geography** breakdown (private/public/loopback/reserved) with an optional MaxMind world map
+- Six equal-size summary cards keep totals, model flags, consensus, and average risk directly comparable
+
+### 🎯 Consensus Threat Triage
+- Every row gets a deterministic **0–100 consensus risk score** from the models available for that run
+- Clear / Guarded / Elevated / Critical queues prioritize evidence without hiding the raw model verdicts
+- Triage persists to SQLite and is queryable from the dashboard and REST API
 
 ### 📤 Export
 - **CSV**, **Excel**, formatted **PDF** report, and a **Fernet-encrypted backup** of the history database
 
 ### 🔒 Access Control & Response
 - Optional **PBKDF2-SHA256 login** (off by default) with multi-user **admin/viewer roles**
+- Separate **Sign in** and optional **Create account** screens; clickable Administrator/Viewer selectors open the matching credential form
+- Self-service accounts are always Viewer-only and stored as salted hashes
+- The compact one-screen sidebar shows the active access level throughout the app; Live Capture repeats the operational role badge directly above **Stop Capture**, the Credits hero stays presentation-only, and **Role permissions** opens the complete role matrix
+- Administrators can export full history and encrypted DB backups; viewers retain monitoring, PCAP analysis, recent history, and triage access
 - **Block suggestions** — copy-paste iptables / ufw / nftables / netsh rules for a flagged attacker (never auto-applied)
+
+### Professional Interface
+- Clean Material icons replace decorative emoji controls in the application UI
+- Primary tabs are **Live Capture**, **Upload PCAP**, **Model Logic**, **History**, and **Credits**
+- Credits contains contributor profiles and GitHub links; **About this project** opens from that view
+- Light and dark themes share the same spacing, contrast, card geometry, and responsive hierarchy
+- Verdicts use stable `Normal` and `Attack` labels; older decorated history values are normalized automatically
 
 ### 🔌 REST API
 - Dependency-free read-only JSON API over the history DB, with optional bearer-token auth
+- Dedicated `/api/triage` endpoint with `min_risk`, `source`, and bounded `limit` filters
+
+### API surface
+
+| Endpoint | Purpose | Useful filters |
+|---|---|---|
+| `GET /health` | Service and v10 version health check | — |
+| `GET /api/summary` | Detection totals, model attack counts, average risk, critical count | — |
+| `GET /api/detections` | Newest persisted detections | `source`, `limit` |
+| `GET /api/triage` | Highest-risk operator queue | `min_risk`, `source`, `limit` |
+| `GET /api/ip/<ip>` | One source IP's evidence, counts, risk, and first/last seen | URL-encoded IP |
+
+Set `NIDS_API_TOKEN` to protect every route with a bearer token. The API is
+strictly read-only, returns JSON with `Cache-Control: no-store`, and caps query
+sizes. See the complete [API reference](docs/api/api.md).
 
 ---
 
@@ -78,6 +142,9 @@ Sniff live packets or drop in a Wireshark capture, and watch Random Forest, Deci
    │  packets_to_df()     │───────►│  (+ anomaly.py verdict mapping)      │
    │  2s/100-conn window  │        └──────────────┬───────────────────────┘
    └──────────────────────┘                       │
+                                                  ▼
+                                      triage.py (consensus risk)
+                                                  │
                                                   ▼
             ┌─────────────────────────────────────────────────────────┐
             │                app.py  (Streamlit UI)                    │
@@ -112,7 +179,7 @@ Full breakdown in [docs/architecture/architecture.md](docs/architecture/architec
 | GeoIP | `geoip2` + MaxMind GeoLite2 (optional) |
 | REST API | stdlib `http.server` — no framework |
 | Desktop build | PyInstaller (folder build + launcher) |
-| Tests | pytest (84) · ruff |
+| Tests | pytest (98) · ruff |
 
 ### Dependencies
 
@@ -132,7 +199,7 @@ Full breakdown in [docs/architecture/architecture.md](docs/architecture/architec
 ### Requirements
 - Python 3.11 or higher
 - **Windows only:** [Npcap](https://npcap.com/#download) for live capture (pcap upload works without it)
-- Live capture needs Administrator (Windows) or root / `CAP_NET_RAW` (Linux/macOS)
+- Live capture needs Npcap with interface access (Windows) or root / `CAP_NET_RAW` (Linux/macOS); Windows Administrator is only needed for access-restricted Npcap installs
 
 ### Quick launch (desktop app)
 Double-click **`NIDS.exe`** from a built `dist/NIDS/` folder — no Python required.
@@ -157,12 +224,25 @@ Open the URL Streamlit prints (default `http://localhost:8501`).
 
 ```bash
 python scripts/train_models.py    # retrain all three models
-python -m nids.api                # REST API on 127.0.0.1:8600
+python src/nids/api.py            # REST API on 127.0.0.1:8600
 python scripts/build_exe.py       # build dist/NIDS/NIDS.exe
 make test && make lint            # pytest + ruff
 ```
 
 Full setup details in [docs/guides/running-locally.md](docs/guides/running-locally.md).
+
+### Docker launch
+
+```bash
+docker compose up --build                         # dashboard
+docker compose --profile api up --build           # dashboard + REST API
+docker compose --profile capture up nids-capture  # Linux host capture
+```
+
+The default container is intentionally unprivileged and supports PCAP upload,
+history, exports, and triage. Raw capture is opt-in because it needs host
+networking and Linux packet capabilities. Windows Npcap is for the native app,
+not a Linux container. See the [container deployment guide](docs/deployment/docker.md).
 
 ---
 
@@ -174,17 +254,47 @@ All settings are optional — the app runs with none of them. Copy `.env.example
 |----------|---------|-------------|
 | `CRITICAL_THRESHOLD_PCT` | `20` | % of traffic flagged before status escalates to CRITICAL |
 | `ALERT_COOLDOWN_SECONDS` | `60` | Minimum seconds between two alerts for the same model |
+| `MAX_PCAP_UPLOAD_MB` | `50` | Reject captures above this in-app safety limit |
+| `NIDS_CAPTURE_INTERFACE` | auto | Default adapter identifier/label for live capture |
+| `LIVE_REFRESH_SECONDS` | `2.5` | Minimum seconds between visible live-dashboard refreshes |
 | `NIDS_DB_PATH` | `data/history.db` | Detection-history database location |
 | `SLACK_WEBHOOK_URL` | — | Slack incoming-webhook URL |
 | `ALERT_WEBHOOK_URL` | — | Generic JSON webhook |
 | `ALERT_SMTP_HOST` / `ALERT_EMAIL_TO` | — | Email alerting (see `.env.example`) |
 | `PAGERDUTY_ROUTING_KEY` | — | PagerDuty Events API v2 key |
 | `TEAMS_WEBHOOK_URL` | — | Microsoft Teams incoming webhook |
-| `NIDS_AUTH_PASSWORD_HASH` | — | Enables the login gate (`python -m nids.auth` to generate) |
+| `NIDS_AUTH_PASSWORD_HASH` | — | Enables the login gate (`python src/nids/auth.py` to generate) |
 | `NIDS_AUTH_USERS` | — | JSON list of users with `admin`/`viewer` roles |
+| `NIDS_SIGNUP_ENABLED` | `false` | Enables Viewer-only self-registration (recommended for trusted local use only) |
+| `NIDS_AUTH_DB_PATH` | `data/auth.db` | Hashed local self-registration account store |
 | `NIDS_API_TOKEN` | — | Bearer token for the REST API |
 | `NIDS_DB_ENCRYPTION_KEY` | — | Fernet key enabling the encrypted backup |
 | `GEOIP_DB_PATH` | — | MaxMind GeoLite2-City `.mmdb` for the world map |
+
+Local source runs automatically load the repository-root `.env` file through
+`python-dotenv`. Values explicitly supplied by the shell, Docker, or Render
+take precedence. The `.env` file is excluded from Git and Docker build context.
+
+---
+
+## ☁️ Deployment
+
+| Target | Command / entry point | Live capture | Persistence |
+|---|---|---|---|
+| Local source | `streamlit run src/nids/app.py` | Yes, with OS privileges and capture backend | Local SQLite |
+| Windows desktop | `python scripts/build_exe.py` → `dist/NIDS/NIDS.exe` | Yes, with Npcap; admin only when access-restricted | `%LOCALAPPDATA%/NIDS/history.db` |
+| Docker | `docker compose up --build` | Upload-only by default | Version-neutral `nids-history` volume |
+| Docker + API | `docker compose --profile api up --build` | Upload-only by default | Shared named volume |
+| Docker capture profile | `docker compose --profile capture up nids-capture` | Linux host networking + `NET_RAW`/`NET_ADMIN` | Named volume |
+| Render | Blueprint from `render.yaml` | Upload-only by design | Persistent `/data` disk |
+
+Render requires `NIDS_AUTH_PASSWORD_HASH` and fails closed when authentication
+is missing or invalid. The blueprint uses the paid Starter plan because Render
+persistent disks are unavailable to Free web services. The container runs as a
+non-root user, exposes a health check, honors Render's `$PORT`, and copies only
+runtime assets into the image. See [Docker and Render deployment](docs/deployment/docker.md),
+[desktop deployment](docs/deployment/desktop-exe.md), and
+[local operation](docs/guides/running-locally.md).
 
 ---
 
@@ -192,8 +302,8 @@ All settings are optional — the app runs with none of them. Copy `.env.example
 
 ```
 network-analysis-intrusion-system/
-├── .github/                # Issue/PR templates, CI (lint · test · retrain)
-├── assets/images/          # Logo and dataset preview images
+├── .github/                # Issue/PR templates, CI (lint · test · container · retrain)
+├── assets/images/          # Canonical logo.png (app/docs) · generated logo.ico (exe)
 ├── config/                 # Feature schema reference
 ├── data/
 │   ├── nsl-kdd/            # NSL-KDD train/test sets
@@ -202,9 +312,10 @@ network-analysis-intrusion-system/
 ├── docs/
 │   ├── api/                # REST API reference
 │   ├── architecture/       # System architecture
-│   ├── deployment/         # Desktop .exe build guide
+│   ├── deployment/         # Docker, Render, and desktop deployment guides
 │   ├── guides/             # User and local-run guides
-│   ├── releases/           # Per-version release notes (v1–v8)
+│   ├── images/             # Figures used by the docs (NSL-KDD charts)
+│   ├── releases/           # Per-version release notes (v1–v10)
 │   └── troubleshooting/    # Common issues and fixes
 ├── models/                 # Trained rf/dt/iforest .pkl models
 ├── notebooks/              # Original coursework artefacts (historical — not live code)
@@ -226,13 +337,15 @@ network-analysis-intrusion-system/
 │   ├── alerts.py               # ● Slack · webhook · email · PagerDuty · Teams
 │   ├── notify.py               # ● Beep synthesis + browser notification
 │   ├── anomaly.py              # ○ Isolation Forest verdict mapping
+│   ├── triage.py               # ○ Cross-model consensus risk scoring
 │   ├── storage.py              # ○ SQLite persistence and queries
 │   ├── reporting.py            # ○ PDF report generation
 │   └── api.py                  # ○ Read-only REST API
-├── tests/                  # pytest suite (84 tests)
+├── tests/                  # pytest suite
 ├── nids.spec               # PyInstaller spec
 ├── Dockerfile              # Container image
-├── docker-compose.yml
+├── docker-compose.yml      # Dashboard plus opt-in API/capture profiles
+├── render.yaml             # Render Blueprint (Starter + persistent disk)
 ├── Makefile                # install · run · api · test · lint · train
 ├── CHANGELOG.md
 ├── CONTRIBUTING.md
@@ -246,17 +359,56 @@ network-analysis-intrusion-system/
 
 ---
 
+## 🧠 Machine Learning & Security Concepts Applied
+
+| Concept | Implementation |
+|---|---|
+| Shared feature schema | Every model receives the same ordered 41-column NSL-KDD feature frame |
+| Stateful feature engineering | `count`, `srv_count`, and rate features use a trailing 2-second / 100-connection window |
+| Supervised classification | Random Forest and Decision Tree learn from labelled normal/attack records |
+| Unsupervised anomaly detection | Isolation Forest is trained on normal traffic and exposes novel outliers |
+| Model disagreement | Raw verdicts remain side by side instead of being hidden behind one ensemble label |
+| Consensus prioritization | Available attack votes become a deterministic 0–100 risk score and four triage levels |
+| Explainability | RF/DT feature importances identify influential inputs; IF limitations are stated explicitly |
+| Durable evidence | SQLite stores packet-derived fields, all verdicts, source, timestamps, and risk metadata |
+| Defense in depth | Optional login, PBKDF2 hashes, role checks, lockout, API bearer auth, and encrypted backup |
+| Safe response workflow | Firewall commands are suggestions only; NIDS never auto-blocks an address |
+| Alert fan-out | One cooldown-controlled event can reach Slack, webhook, SMTP, PagerDuty, and Teams |
+| Cloud least privilege | Default container is non-root; raw capture is opt-in and cloud upload analysis remains isolated |
+
+## 📦 Releases
+
+This repository uses Guardian/Security codenames. Full notes live in
+[docs/releases](docs/releases/) and the chronological record is in
+[CHANGELOG.md](CHANGELOG.md).
+
+| Version | Codename | Milestone | Highlights |
+|---|---|---|---|
+| [v10.0.0](docs/releases/v10.0.0.md) | **Cipher** | Capture, Control & Verify | Adapter selection, role-first auth, compact shell, Credits/About flow, clean verdicts, UI verification |
+| [v9.0.0](docs/releases/v9.0.0.md) | **Vigil** | Deploy, Prioritize & Respond | Cloud hardening, adaptive themes, lockout, safe upload handling, consensus triage |
+| [v8.0.0](docs/releases/v8.0.0.md) | **Phalanx** | Integrate | Retraining CI, roles, REST API, encrypted backup, PagerDuty + Teams |
+| [v7.0.0](docs/releases/v7.0.0.md) | **Bastion** | Control | Dashboard authentication and reviewed firewall suggestions |
+| [v6.0.0](docs/releases/v6.0.0.md) | **Aegis** | Observe | GeoIP, PDF reports, throughput, browser alerts, capture readiness |
+| [v5.0.0](docs/releases/v5.0.0.md) | **Bulwark** | Investigate | Full-history export and per-IP drill-down |
+| [v4.0.0](docs/releases/v4.0.0.md) | **Citadel** | Tune | Configurable threat threshold and historical trend chart |
+| [v3.0.0](docs/releases/v3.0.0.md) | **Watchtower** | Detect | Stateful features, persistence, alerts, Isolation Forest, branded UI |
+| [v2.0.0](docs/releases/v2.0.0.md) | **Vanguard** | Stabilize | Working dual-model dashboard baseline |
+| [v1.0.0](docs/releases/v1.0.0.md) | **Sentinel** | Establish | Repository structure, documentation, CI, and feature tests |
+
+---
+
 ## 🧪 Testing
 
 ```bash
-pytest -q                          # 84 tests
+pytest -q                          # 107 tests
 ruff check src tests scripts       # lint
 ```
 
 Every module is deliberately **free of Streamlit imports** so its logic is unit-testable without a Streamlit runtime — `app.py` holds the UI, everything else is pure logic.
 
 Areas not covered by automated tests (validated manually):
-1. Live capture against real traffic (needs Npcap + Administrator).
+1. Live capture against real traffic (Windows needs Npcap and may require
+   Administrator when Npcap was installed in admin-only mode).
 2. The packaged `.exe` — launch it and confirm the dashboard serves and the History tab resolves its database path.
 3. Real alert delivery to Slack/PagerDuty/Teams (the HTTP calls are mocked in tests).
 
@@ -278,14 +430,14 @@ See [SECURITY.md](SECURITY.md) to report a vulnerability.
   <tr>
     <td align="center">
       <a href="https://github.com/SufiyanAasim">
-        <img src="https://github.com/SufiyanAasim.png" width="72" alt="SufiyanAasim"/><br/>
+        <img src="assets/images/contributors/sufiyanaasim.png" width="72" alt="SufiyanAasim"/><br/>
         <sub><b>Mohammad Sufiyan Aasim</b></sub>
       </a><br/>
       <sub>Data Science · AI/ML · MLOps · SQE</sub>
     </td>
     <td align="center">
       <a href="https://github.com/13eeCoder">
-        <img src="https://github.com/13eeCoder.png" width="72" alt="13eeCoder"/><br/>
+        <img src="assets/images/contributors/13eecoder.png" width="72" alt="13eeCoder"/><br/>
         <sub><b>Muhammad Taha Siddiqui</b></sub>
       </a><br/>
       <sub>Networking · Cybersecurity</sub>
@@ -302,7 +454,7 @@ The codebase is split along each maintainer's domain — see
 | --- | --- | --- |
 | **Traffic capture & analysis** | `features.py` · `netcheck.py` · `throughput.py` · `geo.py` · `data/pcaps/` | [@13eeCoder](https://github.com/13eeCoder) |
 | **Security controls & response** | `auth.py` · `crypto.py` · `firewall.py` · `alerts.py` · `notify.py` · `SECURITY.md` | [@13eeCoder](https://github.com/13eeCoder) |
-| **Models & data science** | `anomaly.py` · `scripts/train_models.py` · `models/` · `notebooks/` · `data/nsl-kdd/` | [@SufiyanAasim](https://github.com/SufiyanAasim) |
+| **Models & data science** | `anomaly.py` · `triage.py` · `scripts/train_models.py` · `models/` · `notebooks/` · `data/nsl-kdd/` | [@SufiyanAasim](https://github.com/SufiyanAasim) |
 | **Dashboard, storage & API** | `app.py` · `storage.py` · `reporting.py` · `api.py` | [@SufiyanAasim](https://github.com/SufiyanAasim) |
 | **MLOps, build & quality** | `.github/workflows/` · `nids.spec` · `scripts/build_exe.py` · `Dockerfile` · `tests/` | [@SufiyanAasim](https://github.com/SufiyanAasim) |
 
@@ -312,9 +464,9 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) to get involved.
 
 ## 📄 License
 
-[MIT License](LICENSE) © 2026 Network Analysis Intrusion System Contributors.
+[MIT License](LICENSE) © 2026 Network Intrusion Detection System Contributors.
 
-Trained on the [NSL-KDD](https://www.unb.ca/cic/datasets/nsl.html) dataset from the Canadian Institute for Cybersecurity — see [docs/DATASET.md](docs/DATASET.md) for citation and terms.
+Trained on **NSL-KDD**, downloaded from the [Kaggle mirror](https://www.kaggle.com/datasets/hassan06/nslkdd) of the dataset originally published by the [Canadian Institute for Cybersecurity, UNB](https://www.unb.ca/cic/datasets/nsl.html) — see [docs/DATASET.md](docs/DATASET.md) for the full citation and terms.
 
 ---
 

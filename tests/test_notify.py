@@ -28,3 +28,9 @@ def test_alert_html_omits_disabled_channels():
 def test_alert_html_escapes_quotes():
     html = notify.alert_html('say "hi"', play_sound=False, browser_notification=True, nonce="3")
     assert '\\"hi\\"' in html
+
+
+def test_alert_html_cannot_close_its_script_tag():
+    html = notify.alert_html("</script><script>alert(1)</script>", False, True)
+    assert "</script><script>alert(1)" not in html
+    assert "\\u003c/script>" in html

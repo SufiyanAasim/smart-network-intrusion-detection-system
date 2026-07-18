@@ -47,9 +47,11 @@ tests/test_notify.py            @13eeCoder
 
 src/nids/app.py                 @SufiyanAasim # Streamlit UI, tabs, charts
 src/nids/anomaly.py             @SufiyanAasim # Isolation Forest verdict mapping
+src/nids/triage.py              @SufiyanAasim # cross-model consensus risk scoring
 src/nids/storage.py             @SufiyanAasim # SQLite persistence and queries
 src/nids/reporting.py           @SufiyanAasim # PDF report generation
 src/nids/api.py                 @SufiyanAasim # read-only REST API
+tests/test_triage.py            @SufiyanAasim
 
 models/                         @SufiyanAasim
 notebooks/                      @SufiyanAasim
@@ -59,6 +61,10 @@ scripts/                        @SufiyanAasim
 nids.spec                       @SufiyanAasim
 Dockerfile                      @SufiyanAasim
 docker-compose.yml              @SufiyanAasim
+render.yaml                     @SufiyanAasim
+.dockerignore                   @SufiyanAasim
+.yamllint.yml                   @SufiyanAasim
+docs/deployment/docker.md       @SufiyanAasim
 Makefile                        @SufiyanAasim
 pyproject.toml                  @SufiyanAasim
 .github/workflows/              @SufiyanAasim

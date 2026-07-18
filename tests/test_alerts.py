@@ -16,6 +16,13 @@ def test_send_slack_alert_posts_when_configured():
     mock_urlopen.assert_called_once()
 
 
+def test_post_json_rejects_non_http_url():
+    import pytest
+
+    with pytest.raises(ValueError, match=r"http\(s\)"):
+        alerts._post_json("file:///tmp/secret", {"text": "x"})
+
+
 def test_send_email_alert_returns_false_when_unconfigured():
     assert alerts.send_email_alert("subject", "body", config=None) is False
 

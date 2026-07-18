@@ -1,27 +1,40 @@
-# Keep the build context small and the image clean.
+# Source control, editor, and agent metadata
 .git/
 .github/
-dist/
-build/
-*.log
+.claude/
+.codex/
+.idea/
+.vscode/
 
-# The full NSL-KDD corpus — the Dockerfile copies only the two files the app
-# reads. Without this, the 54 MB tree is uploaded to the daemon every build.
-data/nsl-kdd/*.arff
-data/nsl-kdd/*.jpg
-data/nsl-kdd/index.html
-data/nsl-kdd/KDDTest-21.txt
-data/nsl-kdd/KDDTrain+_20Percent.txt
-data/history.db
-Dataset.zip
-
-notebooks/
-tests/
-docs/
-__pycache__/
-*.pyc
+# Local environments, credentials, caches, and generated output
+.env
+.env.*
+!.env.example
 .pytest_cache/
 .ruff_cache/
+.mypy_cache/
 .venv/
 venv/
-.env
+__pycache__/
+*.py[cod]
+*.log
+*.db
+*.db-*
+*.sqlite
+*.sqlite3
+build/
+dist/
+htmlcov/
+
+# Development-only repository content
+docs/
+notebooks/
+tests/
+Dataset.zip
+*.pcap
+*.pcapng
+
+# Send only the two NSL-KDD files loaded by the runtime.
+data/nsl-kdd/*
+!data/nsl-kdd/KDDTrain+.txt
+!data/nsl-kdd/KDDTest+.txt

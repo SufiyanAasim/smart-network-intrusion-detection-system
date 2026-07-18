@@ -7,9 +7,9 @@ from nids import reporting
 def _classified_df():
     return pd.DataFrame(
         [
-            {"src_ip": "10.0.0.1", "RF Analysis": "🚨 ATTACK", "DT Analysis": "🚨 ATTACK"},
-            {"src_ip": "10.0.0.1", "RF Analysis": "🚨 ATTACK", "DT Analysis": "✅ Normal"},
-            {"src_ip": "10.0.0.2", "RF Analysis": "✅ Normal", "DT Analysis": "✅ Normal"},
+            {"src_ip": "10.0.0.1", "RF Analysis": "Attack", "DT Analysis": "Attack", "Triage": "Critical", "Risk Score": 100},
+            {"src_ip": "10.0.0.1", "RF Analysis": "Attack", "DT Analysis": "Normal", "Triage": "Elevated", "Risk Score": 50},
+            {"src_ip": "10.0.0.2", "RF Analysis": "Normal", "DT Analysis": "Normal", "Triage": "Clear", "Risk Score": 0},
         ]
     )
 
@@ -30,5 +30,12 @@ def test_build_report_pdf_returns_pdf_bytes():
 
 
 def test_top_ips_empty_when_no_attacks():
-    df = pd.DataFrame([{"src_ip": "10.0.0.2", "RF Analysis": "✅ Normal"}])
+    df = pd.DataFrame([{"src_ip": "10.0.0.2", "RF Analysis": "Normal"}])
     assert reporting._top_ips(df, "RF Analysis") == []
+
+
+def test_browser_print_script_targets_parent_dashboard():
+    script = reporting.browser_print_script("unique-print")
+    assert "window.parent.print()" in script
+    assert "unique-print" in script
+    assert script.startswith("<script>")

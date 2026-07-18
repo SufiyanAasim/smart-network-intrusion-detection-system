@@ -51,8 +51,9 @@ Override it by setting `NIDS_DB_PATH` before launching.
 - **Size:** expect a few hundred MB — scikit-learn, Streamlit, pyarrow and
   scapy are all bundled. `--onefile` is intentionally not used: it would
   re-unpack that payload to temp on every launch.
-- **Live capture** still needs Npcap on Windows, and an Administrator
-  terminal. Pcap upload works without either.
+- **Live capture** needs Npcap on Windows. Administrator is only required
+  when Npcap was installed in admin-only mode or Windows denies capture
+  access. Pcap upload works without either.
 - **Cross-compiling isn't possible.** PyInstaller builds for the OS it runs
   on — build the Windows .exe on Windows.
 - Only `KDDTrain+.txt` and `KDDTest+.txt` are bundled (the encoders and the

@@ -33,8 +33,15 @@ def preprocess_data(df, encoders):
     df_encoded = df.copy()
     for col, le in encoders.items():
         if col in df_encoded.columns:
+            if len(le.classes_) == 0:
+                raise ValueError(f"Encoder for {col!r} has no known classes")
             known_classes = set(le.classes_)
-            df_encoded[col] = df_encoded[col].apply(lambda x: x if x in known_classes else list(known_classes)[0])
+            # LabelEncoder.classes_ is sorted and stable; selecting from the
+            # set made unseen-category predictions vary across processes.
+            fallback = le.classes_[0]
+            df_encoded[col] = df_encoded[col].apply(
+                lambda value: value if value in known_classes else fallback
+            )
             df_encoded[col] = le.transform(df_encoded[col])
     return df_encoded
 
