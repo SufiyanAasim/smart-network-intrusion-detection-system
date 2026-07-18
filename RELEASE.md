@@ -27,12 +27,22 @@ this theme only (never mixed with another theme). Format:
 Codename: <Theme Name> — <Title>
 ```
 
-| Version | Codename | Title |
-| --- | --- | --- |
-| v1.0.0-alpha.1 | Sentinel | Foundation |
-| v2.0.0 | Vanguard | Baseline |
+| Version | Codename | Title | Feature scale |
+| --- | --- | --- | --- |
+| v1.0.0-alpha.1 | Sentinel | Foundation | — (restructure/docs/CI) |
+| v2.0.0 | Vanguard | Baseline | — (baseline tag) |
+| v3.0.0 | Watchtower | *(pending title)* | 2 new features |
+| v4.0.0 | Citadel | *(pending title)* | 2 new features |
+| v5.0.0 | Bulwark | *(pending title)* | 2 new features |
+| v6.0.0 | Aegis | *(pending title)* | **5 new features (grand release)** |
+| v7.0.0 | Bastion | *(pending title)* | 2 new features |
+| v8.0.0 | Cipher | *(pending title)* | **5 new features (grand release)** |
 
-Future candidates from the same theme: Aegis, Warden, Bastion, Watchtower, Cipher, Shield.
+This sequence (v3–v8) was decided upfront so the codename theme stays
+consistent and each release's scope is set before work starts: v3, v4, v5,
+and v7 are regular 2-feature releases; v6 (Aegis) and v8 (Cipher) are grand
+releases that bundle 5 new features each. Titles are chosen per-release
+when its scope is finalized (see docs/releases/).
 
 ## Branch flow
 
