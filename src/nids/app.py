@@ -25,7 +25,7 @@ import altair as alt  # noqa: E402
 import time  # noqa: E402
 
 from nids.features import MODEL_FEATURES, WINDOW_CONNECTIONS, preprocess_data, packets_to_df  # noqa: E402
-from nids import storage, alerts, anomaly, geo, reporting, throughput, notify, netcheck, auth, firewall  # noqa: E402
+from nids import storage, alerts, anomaly, geo, reporting, throughput, notify, netcheck, auth, firewall, crypto  # noqa: E402
 from nids import __version__ as NIDS_VERSION  # noqa: E402
 
 # Raw packets kept in session_state for live capture, so packets_to_df can
@@ -87,8 +87,11 @@ def _require_login():
         submitted = st.form_submit_button("Sign in")
 
     if submitted:
-        if auth.check_credentials(username, password):
+        role = auth.authenticate(username, password)
+        if role is not None:
             st.session_state["authenticated"] = True
+            st.session_state["user_role"] = role
+            st.session_state["user_name"] = username
             st.rerun()
         else:
             st.error("Invalid username or password.")
@@ -97,6 +100,16 @@ def _require_login():
 
 
 _require_login()
+
+
+def current_role():
+    """The signed-in user's role, or None when auth is disabled."""
+    return st.session_state.get("user_role")
+
+
+def is_admin_user():
+    """True if the current session may perform admin-only actions."""
+    return auth.is_admin(current_role())
 
 
 def _dataframe_to_excel_bytes(df):
@@ -197,9 +210,12 @@ if _logo_b64:
 
 # Logout (only shown when auth is active and the user is signed in).
 if auth.is_auth_configured() and st.session_state.get("authenticated"):
-    st.sidebar.caption(f"Signed in as **{auth.configured_username()}**")
+    signed_in = st.session_state.get("user_name", auth.configured_username())
+    role_label = st.session_state.get("user_role", "")
+    st.sidebar.caption(f"Signed in as **{signed_in}** ({role_label})")
     if st.sidebar.button("🔓 Log out"):
-        st.session_state["authenticated"] = False
+        for k in ("authenticated", "user_role", "user_name"):
+            st.session_state.pop(k, None)
         st.rerun()
 
 # Sidebar Metrics
@@ -619,29 +635,48 @@ with tab4:
             st.caption("Trend chart needs at least 2 minutes of history — capture more traffic to see it.")
 
         st.markdown("##### Export full history")
-        st.caption(f"Download all {total} persisted detections (not just the view below).")
-        all_history = storage.query_all()
-        exp_csv, exp_xlsx = st.columns(2)
-        with exp_csv:
-            st.download_button(
-                "⬇️ Download CSV (all history)",
-                all_history.to_csv(index=False).encode("utf-8"),
-                "nids_history.csv",
-                "text/csv",
-                width='stretch',
-            )
-        with exp_xlsx:
-            xlsx_bytes = _dataframe_to_excel_bytes(all_history)
-            if xlsx_bytes is not None:
+        if not is_admin_user():
+            st.caption("🔒 Export is available to admin users only.")
+        else:
+            st.caption(f"Download all {total} persisted detections (not just the view below).")
+            all_history = storage.query_all()
+            exp_csv, exp_xlsx, exp_enc = st.columns(3)
+            with exp_csv:
                 st.download_button(
-                    "⬇️ Download Excel (all history)",
-                    xlsx_bytes,
-                    "nids_history.xlsx",
-                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    "⬇️ CSV (all history)",
+                    all_history.to_csv(index=False).encode("utf-8"),
+                    "nids_history.csv",
+                    "text/csv",
                     width='stretch',
                 )
-            else:
-                st.caption("Excel export needs `openpyxl` (`pip install openpyxl`).")
+            with exp_xlsx:
+                xlsx_bytes = _dataframe_to_excel_bytes(all_history)
+                if xlsx_bytes is not None:
+                    st.download_button(
+                        "⬇️ Excel (all history)",
+                        xlsx_bytes,
+                        "nids_history.xlsx",
+                        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                        width='stretch',
+                    )
+                else:
+                    st.caption("Excel needs `openpyxl`.")
+            with exp_enc:
+                # Encrypted at-rest backup of the raw DB file (opt-in).
+                if not crypto.encryption_available():
+                    st.caption("Encrypted backup needs `cryptography`.")
+                elif crypto.configured_key() is None:
+                    st.caption("Set `NIDS_DB_ENCRYPTION_KEY` to enable encrypted backup.")
+                else:
+                    enc_bytes = crypto.encrypt_file(storage.DEFAULT_DB_PATH)
+                    if enc_bytes is not None:
+                        st.download_button(
+                            "🔐 Encrypted backup",
+                            enc_bytes,
+                            "nids_history.db.enc",
+                            "application/octet-stream",
+                            width='stretch',
+                        )
 
         st.divider()
         st.markdown("##### 🌍 Source IP geography")

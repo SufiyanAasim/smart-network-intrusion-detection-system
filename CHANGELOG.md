@@ -7,6 +7,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [8.0.0] - 2026-07-17
+
+### Added
+- **Model-retraining CI pipeline** (`.github/workflows/retrain.yml`) —
+  retrains the models when `data/nsl-kdd/`, `scripts/train_models.py`, or
+  `src/nids/features.py` change on `main` (or on demand), sanity-checks that
+  the models load, and uploads them as artifacts. New `make api` target.
+- **Multi-user roles/permissions** (`src/nids/auth.py`) — configure several
+  users with roles via `NIDS_AUTH_USERS` (JSON). `admin` sees everything;
+  `viewer` is blocked from admin-only actions (full-history/encrypted
+  export). Single-user setup stays backward compatible (treated as admin),
+  and an open app grants full access.
+- **REST API for detections** (`src/nids/api.py`) — a dependency-free,
+  read-only JSON API over the history DB (`/health`, `/api/summary`,
+  `/api/detections`, `/api/ip/<ip>`), run via `python -m nids.api`. Optional
+  bearer-token auth via `NIDS_API_TOKEN`.
+- **Encrypted history-db backup** (`src/nids/crypto.py`) — download a
+  Fernet-encrypted (`cryptography`) backup of `data/history.db` from the
+  History tab when `NIDS_DB_ENCRYPTION_KEY` is set.
+- **Extra alert integrations** (`src/nids/alerts.py`) — PagerDuty (Events
+  API v2, `PAGERDUTY_ROUTING_KEY`) and Microsoft Teams
+  (`TEAMS_WEBHOOK_URL`), folded into `send_critical_alert`.
+- Tests for all five (`tests/test_api.py`, `test_crypto.py`,
+  `test_auth_roles.py`, `test_alerts_extra.py`).
+
+### Notes
+- Codename: **Cipher** (Guardian/Security theme) — the final **grand
+  release** (5 features) of the v3–v8 roadmap. See RELEASE.md.
+- New dependency: `cryptography>=42.0` (encrypted backup).
+
 ## [7.0.0] - 2026-07-17
 
 ### Added

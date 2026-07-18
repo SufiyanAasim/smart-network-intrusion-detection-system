@@ -1,0 +1,40 @@
+name: retrain-models
+
+# Retrain the models whenever the training data changes on the main branch,
+# or on demand. The refreshed model artifacts are uploaded so a maintainer
+# can review and commit them.
+on:
+  push:
+    branches: [main]
+    paths:
+      - "data/nsl-kdd/**"
+      - "scripts/train_models.py"
+      - "src/nids/features.py"
+  workflow_dispatch:
+
+jobs:
+  retrain:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -r requirements.txt
+      - name: Retrain models
+        run: python scripts/train_models.py
+      - name: Sanity-check the retrained models load
+        run: |
+          python - <<'PY'
+          import joblib, os
+          for name in ("rf_model.pkl", "dt_model.pkl", "iforest_model.pkl"):
+              path = os.path.join("models", name)
+              assert os.path.exists(path), f"missing {path}"
+              joblib.load(path)
+          print("All models retrained and load cleanly.")
+          PY
+      - name: Upload model artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: retrained-models
+          path: models/*.pkl

@@ -4,11 +4,11 @@
 
 # Network Analysis Intrusion System (NIDS)
 
-![version](https://img.shields.io/badge/version-7.0.0-blue)
+![version](https://img.shields.io/badge/version-8.0.0-blue)
 ![license](https://img.shields.io/badge/license-MIT-green)
 ![python](https://img.shields.io/badge/python-3.11%2B-blue)
 
-🚀 **v7.0.0 — Codename: Bastion**
+🚀 **v8.0.0 — Codename: Cipher**
 
 A Streamlit dashboard that detects network intrusions in real time, comparing
 a **Random Forest**, a **Decision Tree**, and an **Isolation Forest**
@@ -33,8 +33,12 @@ classifier trained on the NSL-KDD dataset — side by side, on the same traffic.
 - ⚙️ **Configurable thresholds** — adjust the CRITICAL/SUSPICIOUS cutoff live via a sidebar slider.
 - 🧠 **Explainable AI tab** — feature-importance charts for RF/DT.
 - 🩺 **Capture readiness** — detects a missing Npcap/libpcap provider and tells you how to fix it.
-- 🔒 **Optional login** — gate the dashboard behind a PBKDF2-hashed password (off by default).
+- 🔒 **Optional login + roles** — gate the dashboard behind a PBKDF2-hashed password (off by default),
+  with optional multi-user admin/viewer roles.
 - 🚫 **Block suggestions** — ready-to-copy firewall rules for a flagged attacker IP (never auto-applied).
+- 🔌 **REST API** — read-only JSON API over the history DB (`python -m nids.api`).
+- 🔐 **Encrypted backup** — download a Fernet-encrypted backup of the history DB.
+- 📣 **Alert integrations** — Slack, webhook, email, PagerDuty, and Microsoft Teams.
 
 ## Screenshots
 
@@ -109,11 +113,13 @@ docker compose up --build
 │   ├── nsl-kdd/       NSL-KDD train/test sets
 │   ├── pcaps/         sample .pcap files for manual testing
 │   └── history.db     persisted detection history (SQLite, gitignored)
-├── docs/              architecture, guides, releases, troubleshooting
+├── docs/              architecture, api, guides, releases, troubleshooting
 ├── models/            trained rf_model.pkl / dt_model.pkl / iforest_model.pkl
 ├── notebooks/         original training notebook
 ├── scripts/           train_models.py (CLI retraining)
-├── src/nids/          app.py (UI), features.py, storage.py, alerts.py, anomaly.py (pure logic)
+├── src/nids/          app.py (UI) + pure logic: features, storage, alerts,
+│                      anomaly, geo, reporting, throughput, notify, netcheck,
+│                      auth, firewall, crypto, api
 └── tests/             pytest suite
 ```
 
