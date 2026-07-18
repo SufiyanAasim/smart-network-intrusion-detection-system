@@ -369,9 +369,9 @@ import os
 import tempfile
 
 # --- 1. Page Configuration ---
-st.set_page_config(page_title="Network Intrusion Detection System", layout="wide")
+st.set_page_config(page_title="Smart Network Intrusion Detection System", layout="wide")
 
-st.title("🛡️ Network Intrusion Detection System")
+st.title("🛡️ Smart Network Intrusion Detection System")
 st.markdown("Compare **Random Forest** and **Decision Tree** models side-by-side.")
 
 # --- 2. Smart Path Finding ---
@@ -558,9 +558,9 @@ import os
 import tempfile
 
 # --- 1. Page Configuration ---
-st.set_page_config(page_title="Network Intrusion Detection System", layout="wide")
+st.set_page_config(page_title="Smart Network Intrusion Detection System", layout="wide")
 
-st.title("🛡️ Network Intrusion Detection System")
+st.title("🛡️ Smart Network Intrusion Detection System")
 st.markdown("Compare **Random Forest** and **Decision Tree** models side-by-side.")
 
 # --- 2. Smart Path Finding ---
@@ -773,9 +773,9 @@ import tempfile
 import altair as alt
 
 # --- 1. Page Configuration ---
-st.set_page_config(page_title="Network Intrusion Detection System", layout="wide")
+st.set_page_config(page_title="Smart Network Intrusion Detection System", layout="wide")
 
-st.title("🛡️ Network Intrusion Detection System")
+st.title("🛡️ Smart Network Intrusion Detection System")
 st.markdown("Compare **Random Forest** and **Decision Tree** models side-by-side.")
 
 # --- 2. Smart Path Finding ---
@@ -1026,9 +1026,9 @@ import tempfile
 import altair as alt
 
 # --- 1. Page Configuration ---
-st.set_page_config(page_title="Network Intrusion Detection System", layout="wide")
+st.set_page_config(page_title="Smart Network Intrusion Detection System", layout="wide")
 
-st.title("🛡️ Network Intrusion Detection System")
+st.title("🛡️ Smart Network Intrusion Detection System")
 st.markdown("Compare **Random Forest** and **Decision Tree** models side-by-side.")
 
 # --- 2. Smart Path Finding ---
@@ -1309,9 +1309,9 @@ import tempfile
 import altair as alt
 
 # --- 1. Page Configuration ---
-st.set_page_config(page_title="Network Intrusion Detection System", layout="wide")
+st.set_page_config(page_title="Smart Network Intrusion Detection System", layout="wide")
 
-st.title("🛡️ Network Intrusion Detection System")
+st.title("🛡️ Smart Network Intrusion Detection System")
 st.markdown("Compare **Random Forest** and **Decision Tree** models side-by-side.")
 
 # --- 2. Smart Path Finding ---
@@ -1606,9 +1606,9 @@ import tempfile
 import altair as alt
 
 # --- 1. Page Configuration ---
-st.set_page_config(page_title="Network Intrusion Detection System", layout="wide")
+st.set_page_config(page_title="Smart Network Intrusion Detection System", layout="wide")
 
-st.title("🛡️ Network Intrusion Detection System")
+st.title("🛡️ Smart Network Intrusion Detection System")
 st.markdown("Compare **Random Forest** and **Decision Tree** models side-by-side.")
 
 # --- 2. Smart Path Finding ---
@@ -1961,9 +1961,9 @@ import altair as alt
 from collections import Counter
 
 # --- 1. Page Configuration ---
-st.set_page_config(page_title="Network Intrusion Detection System", layout="wide")
+st.set_page_config(page_title="Smart Network Intrusion Detection System", layout="wide")
 
-st.title("🛡️ Network Intrusion Detection System")
+st.title("🛡️ Smart Network Intrusion Detection System")
 st.markdown("Compare **Random Forest** and **Decision Tree** models side-by-side.")
 
 # --- 2. Smart Path Finding ---
@@ -2265,9 +2265,9 @@ from collections import Counter
 import time
 
 # --- 1. Page Configuration ---
-st.set_page_config(page_title="Network Intrusion Detection System", layout="wide")
+st.set_page_config(page_title="Smart Network Intrusion Detection System", layout="wide")
 
-st.title("🛡️ Network Intrusion Detection System")
+st.title("🛡️ Smart Network Intrusion Detection System")
 st.markdown("Compare **Random Forest** and **Decision Tree** models side-by-side.")
 
 # --- 2. Smart Path Finding ---

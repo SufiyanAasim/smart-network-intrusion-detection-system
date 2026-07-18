@@ -1,6 +1,6 @@
-# v10 reference contract; application code remains authoritative.
-schema_version: 10
-application_version: "10.0.0"
+# v11 reference contract; application code remains authoritative.
+schema_version: 11
+application_version: "11.0.0"
 
 # Reference list of the 41 NSL-KDD feature columns the models expect,
 # in the exact order used by src/nids/features.py::MODEL_FEATURES.

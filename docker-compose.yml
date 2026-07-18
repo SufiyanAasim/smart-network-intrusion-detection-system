@@ -4,7 +4,7 @@ x-nids-common: &nids-common
   build:
     context: .
     dockerfile: Dockerfile
-  image: nids:10.0.0
+  image: nids:11.0.0
   init: true
   restart: unless-stopped
   stop_grace_period: 30s
@@ -28,6 +28,8 @@ services:
       PORT: "8501"
       NIDS_DB_PATH: /data/history.db
       NIDS_AUTH_DB_PATH: /data/auth.db
+      NIDS_AUTONOMY_MODE: ${NIDS_AUTONOMY_MODE:-shadow}
+      NIDS_AUTONOMY_EXECUTE: ${NIDS_AUTONOMY_EXECUTE:-false}
     volumes:
       - nids-data:/data
       - ./models:/app/models:ro
@@ -79,6 +81,8 @@ services:
       PORT: "8501"
       NIDS_DB_PATH: /data/history.db
       NIDS_AUTH_DB_PATH: /data/auth.db
+      NIDS_AUTONOMY_MODE: ${NIDS_AUTONOMY_MODE:-shadow}
+      NIDS_AUTONOMY_EXECUTE: ${NIDS_AUTONOMY_EXECUTE:-false}
     volumes:
       - nids-data:/data
       - ./models:/app/models:ro

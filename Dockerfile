@@ -1,13 +1,13 @@
 # syntax=docker/dockerfile:1
 
-# NIDS v10 dashboard/API runtime. The default command serves Streamlit; Compose
+# NIDS v11 dashboard/API runtime. The default command serves Streamlit; Compose
 # can override it to run the read-only REST API from the same immutable image.
 ARG PYTHON_VERSION=3.11
 FROM python:${PYTHON_VERSION}-slim-bookworm
 
-LABEL org.opencontainers.image.title="Network Intrusion Detection System" \
-      org.opencontainers.image.description="Multi-model network intrusion detection and consensus triage" \
-      org.opencontainers.image.version="10.0.0" \
+LABEL org.opencontainers.image.title="Smart Network Intrusion Detection System" \
+      org.opencontainers.image.description="Policy-governed autonomous network intrusion detection" \
+      org.opencontainers.image.version="11.0.0" \
       org.opencontainers.image.source="https://github.com/SufiyanAasim/network-analysis-intrusion-system" \
       org.opencontainers.image.licenses="MIT"
 
@@ -25,6 +25,7 @@ ENV HOME=/home/nids \
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
         libpcap0.8 \
+        iptables \
     && rm -rf /var/lib/apt/lists/*
 
 RUN groupadd --gid 10001 nids \

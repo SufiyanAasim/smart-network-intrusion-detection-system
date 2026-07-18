@@ -26,6 +26,10 @@ services:
         value: "60"
       - key: CRITICAL_THRESHOLD_PCT
         value: "20"
+      - key: NIDS_AUTONOMY_MODE
+        value: shadow
+      - key: NIDS_AUTONOMY_EXECUTE
+        value: "false"
     # Persistent disks require a paid Render instance; `starter` is therefore
     # deliberate. A free instance would lose SQLite history on every restart.
     disk:

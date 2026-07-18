@@ -1,19 +1,19 @@
 <div align="center">
 
-<img src="assets/images/logo.png" alt="Network Intrusion Detection System shield" width="176">
+<img src="assets/images/logo.png" alt="Smart Network Intrusion Detection System shield" width="176">
 
-# Network Intrusion Detection System
+# Smart Network Intrusion Detection System
 
 ### A multi-model network intrusion detection, triage, and response workspace
 
 [![Python 3.11](https://img.shields.io/badge/Python-3.11%2B-3776ab?style=flat&logo=python&logoColor=white)](docs/guides/running-locally.md)
-[![Version](https://img.shields.io/badge/version-10.0.0-blue?style=flat)](docs/releases/v10.0.0.md)
-[![Release](https://img.shields.io/badge/release-Cipher%20%E2%80%94%20Capture%2C%20Control%20%26%20Verify-8A2BE2?style=flat)](docs/releases/v10.0.0.md)
+[![Version](https://img.shields.io/badge/version-11.0.0-blue?style=flat)](docs/releases/v11.0.0.md)
+[![Release](https://img.shields.io/badge/release-Cipher%20%E2%80%94%20Autonomy-8A2BE2?style=flat)](docs/releases/v11.0.0.md)
 [![License: MIT](https://img.shields.io/badge/License-MIT-22c55e?style=flat)](LICENSE)
 [![UI](https://img.shields.io/badge/UI-Streamlit-FF4B4B?style=flat&logo=streamlit&logoColor=white)](src/nids/app.py)
 [![ML](https://img.shields.io/badge/ML-scikit--learn-F7931E?style=flat&logo=scikitlearn&logoColor=white)](scripts/train_models.py)
 [![Platform](https://img.shields.io/badge/platform-Windows%20%C2%B7%20Linux%20%C2%B7%20macOS-64748b?style=flat)](docs/guides/running-locally.md)
-[![Tests](https://img.shields.io/badge/tests-109%20passing-16a34a?style=flat)](tests/)
+[![Tests](https://img.shields.io/badge/tests-117%20passing-16a34a?style=flat)](tests/)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-0ea5e9?style=flat)](CONTRIBUTING.md)
 
 Inspect live traffic or drop in a Wireshark capture, compare three model verdicts,
@@ -27,21 +27,21 @@ persistent history, evidence exports, and a read-only REST API.
 ---
 
 **Authors:** [Mohammad Sufiyan Aasim](https://github.com/SufiyanAasim) · [Muhammad Taha Siddiqui](https://github.com/13eeCoder)<br>
-**Latest release:** v10.0.0 — **Cipher** _(Capture, Control & Verify)_
+**Latest release:** v11.0.0 — **Cipher** _(Autonomy)_
 
 **Docs:** [Architecture](docs/architecture/architecture.md) · [API](docs/api/api.md) · [Local setup](docs/guides/running-locally.md) · [User guide](docs/guides/user-guide.md) · [Docker & Render](docs/deployment/docker.md) · [Desktop build](docs/deployment/desktop-exe.md) · [Troubleshooting](docs/troubleshooting/troubleshooting.md) · [Release notes](docs/releases/)<br>
 **Community:** [Contributing](CONTRIBUTING.md) · [Security](SECURITY.md) · [Support](SUPPORT.md) · [Roadmap](ROADMAP.md) · [Release process](RELEASE.md) · [Code of Conduct](CODE_OF_CONDUCT.md)
 
-Network Intrusion Detection System (NIDS) is a Python security workspace that
+Smart Network Intrusion Detection System (NIDS) is a Python security workspace that
 runs Random Forest, Decision Tree, and Isolation Forest over the same packet
 evidence. It reconstructs the 41-feature NSL-KDD schema, preserves each raw
 model verdict, then adds deterministic consensus triage so an analyst can see
 what needs attention first without losing the evidence behind the score.
 
-**v10.0.0 makes local operation explicit and verifiable:** choose the exact
-capture adapter, understand device-versus-LAN visibility before starting, use
-role-first sign-in and Viewer registration, and work from a compact professional
-shell with first-class Credits, top-bar notifications, and consistent evidence.
+**v11.0.0 adds policy-governed autonomous defense:** correlate high-confidence
+evidence into incidents, validate decisions in Shadow mode, approve reversible
+responses, monitor behavior drift, and permit bounded automatic containment only
+when an Administrator and server policy explicitly enable it.
 
 > [!IMPORTANT]
 > This is a research and portfolio system built around the NSL-KDD benchmark.
@@ -63,7 +63,7 @@ shell with first-class Credits, top-bar notifications, and consistent evidence.
 - Explicit **capture-interface selector** for Ethernet, Wi-Fi, VPN, and virtual adapters
 - In-app capture-scope guidance: local adapters see this device's visible traffic; whole-LAN monitoring requires SPAN/port mirroring, a TAP, or a gateway sensor
 - Calmer 2.5-second dashboard refresh cadence; Stop only pauses intake and never prepares or downloads a report
-- Live CSV, PDF, and Print controls appear only after the explicit **Prepare report exports** action
+- Live CSV and PDF controls appear only after **Prepare Report Exports**; Print stays in the Live Capture header
 
 ### 📂 Pcap Upload
 - Drop a `.pcap`/`.pcapng` from Wireshark and get an instant classified report
@@ -90,6 +90,13 @@ shell with first-class Credits, top-bar notifications, and consistent evidence.
 - Clear / Guarded / Elevated / Critical queues prioritize evidence without hiding the raw model verdicts
 - Triage persists to SQLite and is queryable from the dashboard and REST API
 
+### Policy-Governed Autonomous Defense
+- **Shadow**, **Approval**, and **Autonomous** modes separate observation, human authorization, and bounded response
+- Correlates repeated high-risk evidence by source and time window into stable incidents
+- Private sources are protected by default; active blocks are rate-limited, time-bound, audited, and reversible
+- Host execution is disabled by default and requires the independent `NIDS_AUTONOMY_EXECUTE=true` server gate
+- Adaptive behavior drift recommends reviewed offline retraining without silently replacing production models
+
 ### 📤 Export
 - **CSV**, **Excel**, formatted **PDF** report, and a **Fernet-encrypted backup** of the history database
 
@@ -97,27 +104,32 @@ shell with first-class Credits, top-bar notifications, and consistent evidence.
 - Optional **PBKDF2-SHA256 login** (off by default) with multi-user **admin/viewer roles**
 - Separate **Sign in** and optional **Create account** screens; clickable Administrator/Viewer selectors open the matching credential form
 - Self-service accounts are always Viewer-only and stored as salted hashes
-- The compact one-screen sidebar shows the active access level throughout the app; Live Capture repeats the operational role badge directly above **Stop Capture**, the Credits hero stays presentation-only, and **Role permissions** opens the complete role matrix
+- The compact one-screen sidebar is the single source for the active access level; Live Capture stays focused on capture actions, the Credits hero stays presentation-only, and **Role permissions** opens the complete role matrix
 - Administrators can export full history and encrypted DB backups; viewers retain monitoring, PCAP analysis, recent history, and triage access
-- **Block suggestions** — copy-paste iptables / ufw / nftables / netsh rules for a flagged attacker (never auto-applied)
+- **Block suggestions** remain copy-paste-only; v11 autonomous execution is isolated behind explicit policy, TTL, rollback, and audit safeguards
 
 ### Professional Interface
 - Clean Material icons replace decorative emoji controls in the application UI
-- Primary tabs are **Live Capture**, **Upload PCAP**, **Model Logic**, **History**, and **Credits**
-- Credits contains contributor profiles and GitHub links; **About this project** opens from that view
+- Primary tabs are **Dashboard**, **Live Capture**, **Upload PCAP**, **Model Logic**, **Autonomy**, **History**, and **Credits**
+- Dashboard opens first with aggregate triage, model-rate, risk, and source analytics; Live Capture owns Print, Record Screen, capture controls, throughput monitoring, and detailed model-result graphs
+- Credits contains contributor profiles and GitHub links; **About this project** opens the project summary and technology list
 - Light and dark themes share the same spacing, contrast, card geometry, and responsive hierarchy
 - Verdicts use stable `Normal` and `Attack` labels; older decorated history values are normalized automatically
 
 ### 🔌 REST API
 - Dependency-free read-only JSON API over the history DB, with optional bearer-token auth
 - Dedicated `/api/triage` endpoint with `min_risk`, `source`, and bounded `limit` filters
+- Read-only autonomy summary, incident, and action endpoints
 
 ### API surface
 
 | Endpoint | Purpose | Useful filters |
 |---|---|---|
-| `GET /health` | Service and v10 version health check | — |
+| `GET /health` | Service and v11 version health check | — |
 | `GET /api/summary` | Detection totals, model attack counts, average risk, critical count | — |
+| `GET /api/autonomy/summary` | Correlated incident and action totals | — |
+| `GET /api/autonomy/incidents` | Latest correlated autonomy incidents | `limit` |
+| `GET /api/autonomy/actions` | Audited response action state | `status`, `limit` |
 | `GET /api/detections` | Newest persisted detections | `source`, `limit` |
 | `GET /api/triage` | Highest-risk operator queue | `min_risk`, `source`, `limit` |
 | `GET /api/ip/<ip>` | One source IP's evidence, counts, risk, and first/last seen | URL-encoded IP |
@@ -384,7 +396,8 @@ This repository uses Guardian/Security codenames. Full notes live in
 
 | Version | Codename | Milestone | Highlights |
 |---|---|---|---|
-| [v10.0.0](docs/releases/v10.0.0.md) | **Cipher** | Capture, Control & Verify | Adapter selection, role-first auth, compact shell, Credits/About flow, clean verdicts, UI verification |
+| [v11.0.0](docs/releases/v11.0.0.md) | **Cipher** | Autonomy | Correlation, drift signals, approvals, reversible containment, audit trail |
+| [v10.0.0](docs/releases/v10.0.0.md) | **Argus** | Capture, Control & Verify | Adapter selection, role-first auth, compact shell, Credits/About flow, clean verdicts, UI verification |
 | [v9.0.0](docs/releases/v9.0.0.md) | **Vigil** | Deploy, Prioritize & Respond | Cloud hardening, adaptive themes, lockout, safe upload handling, consensus triage |
 | [v8.0.0](docs/releases/v8.0.0.md) | **Phalanx** | Integrate | Retraining CI, roles, REST API, encrypted backup, PagerDuty + Teams |
 | [v7.0.0](docs/releases/v7.0.0.md) | **Bastion** | Control | Dashboard authentication and reviewed firewall suggestions |
@@ -433,14 +446,14 @@ See [SECURITY.md](SECURITY.md) to report a vulnerability.
         <img src="assets/images/contributors/sufiyanaasim.png" width="72" alt="SufiyanAasim"/><br/>
         <sub><b>Mohammad Sufiyan Aasim</b></sub>
       </a><br/>
-      <sub>Data Science · AI/ML · MLOps · SQE</sub>
+      <sub>Data Sciences · AI/ML Ops · SQE</sub>
     </td>
     <td align="center">
       <a href="https://github.com/13eeCoder">
         <img src="assets/images/contributors/13eecoder.png" width="72" alt="13eeCoder"/><br/>
         <sub><b>Muhammad Taha Siddiqui</b></sub>
       </a><br/>
-      <sub>Networking · Cybersecurity</sub>
+      <sub>Cybersecurity · Networking</sub>
     </td>
   </tr>
 </table>
@@ -464,7 +477,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) to get involved.
 
 ## 📄 License
 
-[MIT License](LICENSE) © 2026 Network Intrusion Detection System Contributors.
+[MIT License](LICENSE) © 2026 Smart Network Intrusion Detection System Contributors.
 
 Trained on **NSL-KDD**, downloaded from the [Kaggle mirror](https://www.kaggle.com/datasets/hassan06/nslkdd) of the dataset originally published by the [Canadian Institute for Cybersecurity, UNB](https://www.unb.ca/cic/datasets/nsl.html) — see [docs/DATASET.md](docs/DATASET.md) for the full citation and terms.
 

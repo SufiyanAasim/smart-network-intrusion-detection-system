@@ -103,15 +103,28 @@ to `Attack`/`Normal` in place without deleting old history.
 
 `app.py` keeps one compact sidebar for identity, access, model accuracy, and the
 critical threshold. Notification preferences are fixed beside the Streamlit
-deployment toolbar. The primary navigation contains Live Capture, Upload PCAP,
-Model Logic, History, and Credits; About is a secondary dialog opened from
-Credits. Role-first sign-in selects Administrator or Viewer before rendering
+deployment toolbar. The primary navigation opens on Dashboard, followed by Live
+Capture, Upload PCAP, Model Logic, Autonomy, History, and Credits. Dashboard owns
+aggregate session analytics; Live Capture owns printing, screen recording, packet
+controls, the stable 60-second throughput monitor, and detailed model-result graphs.
+About is a secondary dialog opened from Credits and contains the technology list.
+Role-first sign-in selects Administrator or Viewer before rendering
 the credential form, while authorization is still determined by the
 authenticated account rather than client-side selection.
 
+## Policy-governed autonomy
+
+`autonomy.py` is a control plane downstream of immutable model verdicts and
+consensus triage. It correlates high-risk rows into stable per-source incidents,
+persists actions and audit events, and exposes Shadow, Approval, and Autonomous
+modes. UI mode selection cannot bypass `NIDS_AUTONOMY_EXECUTE`; private-source
+protection, maximum active blocks, TTL rollback, validated argv commands, and
+no-shell execution remain server-side guardrails. Behavior drift recommends a
+reviewed offline retraining run but never replaces models automatically.
+
 ## Container topology
 
-The v10 image contains one immutable application runtime. Its default command
+The v11 image contains one immutable application runtime. Its default command
 serves Streamlit as UID/GID 10001, while Compose can override the command for the
 read-only REST API. Both processes use `/data/history.db`; local Compose mounts
 the version-neutral `nids-history` volume there and Render attaches its persistent disk there.

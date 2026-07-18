@@ -29,7 +29,7 @@ is open; keep its default localhost bind in that mode.
 ### `GET /health`
 
 ```json
-{"status":"ok","service":"nids-api","version":"10.0.0"}
+{"status":"ok","service":"nids-api","version":"11.0.0"}
 ```
 
 ### `GET /api/summary`
@@ -84,6 +84,23 @@ curl "http://127.0.0.1:8600/api/triage?min_risk=67&limit=25"
 Returns up to 500 detections for one percent-decoded source IP plus totals,
 model attack counts, critical consensus count, average risk, and first/last
 seen timestamps.
+
+### `GET /api/autonomy/summary`
+
+Returns correlated incident, pending approval, active block, and Shadow
+simulation totals.
+
+### `GET /api/autonomy/incidents`
+
+Returns the newest correlated incidents. `limit` defaults to 100 and is bounded
+to 1–10000.
+
+### `GET /api/autonomy/actions`
+
+Returns audited response actions. `limit` is bounded to 1–10000; optional
+`status` accepts `simulated`, `pending`, `guarded`, `active`, `denied`,
+`rolled_back`, or `failed`. The API remains read-only: approvals and rollbacks
+are never exposed as HTTP GET operations.
 
 ## Errors and response handling
 

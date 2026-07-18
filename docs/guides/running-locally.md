@@ -35,6 +35,14 @@ screens. New self-service accounts are always Viewers and are stored as salted
 PBKDF2 hashes in `data/auth.db`; an unauthenticated user cannot create an
 Administrator account.
 
+## Autonomous Defense safety
+
+The local default is Shadow mode and cannot change host firewall state. Use
+Approval mode to validate decisions first. Autonomous execution requires both
+the UI mode and `NIDS_AUTONOMY_EXECUTE=true`; run the sensor with the privileges
+needed by `netsh` (Windows) or `iptables` (Linux), keep private-source execution
+disabled initially, and verify TTL rollback on a non-production network.
+
 ## Notes
 
 - Live packet capture (Tab 1) needs elevated privileges:
