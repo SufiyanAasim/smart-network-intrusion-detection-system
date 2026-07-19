@@ -1,21 +1,22 @@
 services:
   - type: web
-    name: nids-dashboard
+    name: s-nids-dashboard
     runtime: docker
-    plan: starter
+    plan: free
     branch: main
     dockerfilePath: ./Dockerfile
     autoDeployTrigger: checksPass
     healthCheckPath: /_stcore/health
-    maxShutdownDelaySeconds: 30
     envVars:
       # Render deployments fail closed when this secret is not configured.
       - key: NIDS_AUTH_PASSWORD_HASH
-        sync: false
+        value: pbkdf2_sha256$260000$0b331d1815877bee7eb89bfd59a80c05$5521f5a3bb793d1c3186d31c9b174569f1b8bbd20f3a4502c9fbb99a7f07e88f
+      - key: NIDS_AUTH_USERS
+        value: '[{"username":"admin","password_hash":"pbkdf2_sha256$260000$0b331d1815877bee7eb89bfd59a80c05$5521f5a3bb793d1c3186d31c9b174569f1b8bbd20f3a4502c9fbb99a7f07e88f","role":"admin"},{"username":"viewer","password_hash":"pbkdf2_sha256$260000$e96cbb9b569fc90a71fe223d06a1de8b$3da1691d13748a814d37c3e5f191b1a95c7b002ff7bce351f9f81bdfff9ed9ed","role":"viewer"}]'
       - key: NIDS_AUTH_USERNAME
         value: admin
       - key: NIDS_SIGNUP_ENABLED
-        value: "false"
+        value: "true"
       - key: NIDS_AUTH_DB_PATH
         value: /data/auth.db
       - key: NIDS_DB_PATH
@@ -30,9 +31,3 @@ services:
         value: shadow
       - key: NIDS_AUTONOMY_EXECUTE
         value: "false"
-    # Persistent disks require a paid Render instance; `starter` is therefore
-    # deliberate. A free instance would lose SQLite history on every restart.
-    disk:
-      name: nids-history-data
-      mountPath: /data
-      sizeGB: 1

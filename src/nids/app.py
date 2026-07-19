@@ -94,9 +94,15 @@ COLOR_IFOREST = theme.COLOR["iforest"]
 VERDICT_SCALE = alt.Scale(domain=[triage.NORMAL_VERDICT, triage.ATTACK_VERDICT], range=[COLOR_NORMAL, COLOR_ATTACK])
 
 # --- 1. Page Configuration ---
+try:
+    from PIL import Image
+    _PAGE_ICON = Image.open(_LOGO_PATH) if os.path.exists(_LOGO_PATH) else _LOGO_PATH
+except Exception:
+    _PAGE_ICON = _LOGO_PATH
+
 st.set_page_config(
     page_title=f"{RELEASE_CODENAME} · {PRODUCT_NAME}",
-    page_icon=_LOGO_PATH,
+    page_icon=_PAGE_ICON,
     layout="wide",
 )
 st.markdown(
