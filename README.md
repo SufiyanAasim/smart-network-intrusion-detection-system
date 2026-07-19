@@ -397,16 +397,16 @@ This repository uses Guardian/Security codenames. Full notes live in
 | Version | Codename | Milestone | Highlights |
 |---|---|---|---|
 | [v11.0.0](docs/releases/v11.0.0.md) | **Cipher** | Autonomy | Correlation, drift signals, approvals, reversible containment, audit trail |
-| [v10.0.0](docs/releases/v10.0.0.md) | **Argus** | Capture, Control & Verify | Adapter selection, role-first auth, compact shell, Credits/About flow, clean verdicts, UI verification |
-| [v9.0.0](docs/releases/v9.0.0.md) | **Vigil** | Deploy, Prioritize & Respond | Cloud hardening, adaptive themes, lockout, safe upload handling, consensus triage |
-| [v8.0.0](docs/releases/v8.0.0.md) | **Phalanx** | Integrate | Retraining CI, roles, REST API, encrypted backup, PagerDuty + Teams |
-| [v7.0.0](docs/releases/v7.0.0.md) | **Bastion** | Control | Dashboard authentication and reviewed firewall suggestions |
-| [v6.0.0](docs/releases/v6.0.0.md) | **Aegis** | Observe | GeoIP, PDF reports, throughput, browser alerts, capture readiness |
-| [v5.0.0](docs/releases/v5.0.0.md) | **Bulwark** | Investigate | Full-history export and per-IP drill-down |
-| [v4.0.0](docs/releases/v4.0.0.md) | **Citadel** | Tune | Configurable threat threshold and historical trend chart |
-| [v3.0.0](docs/releases/v3.0.0.md) | **Watchtower** | Detect | Stateful features, persistence, alerts, Isolation Forest, branded UI |
-| [v2.0.0](docs/releases/v2.0.0.md) | **Vanguard** | Stabilize | Working dual-model dashboard baseline |
-| [v1.0.0](docs/releases/v1.0.0.md) | **Sentinel** | Establish | Repository structure, documentation, CI, and feature tests |
+| [v10.0.0](docs/releases/v10.0.0.md) | **Argus** | Verification | Adapter selection, role-first auth, compact shell, Credits/About flow, clean verdicts, UI verification |
+| [v9.0.0](docs/releases/v9.0.0.md) | **Vigil** | Operations | Cloud hardening, adaptive themes, lockout, safe upload handling, consensus triage |
+| [v8.0.0](docs/releases/v8.0.0.md) | **Phalanx** | Infrastructure | Retraining CI, roles, REST API, encrypted backup, PagerDuty + Teams |
+| [v7.0.0](docs/releases/v7.0.0.md) | **Bastion** | Security | Dashboard authentication and reviewed firewall suggestions |
+| [v6.0.0](docs/releases/v6.0.0.md) | **Aegis** | Analytics | GeoIP, PDF reports, throughput, browser alerts, capture readiness |
+| [v5.0.0](docs/releases/v5.0.0.md) | **Bulwark** | Data | Full-history export and per-IP drill-down |
+| [v4.0.0](docs/releases/v4.0.0.md) | **Citadel** | Thresholds | Configurable threat threshold and historical trend chart |
+| [v3.0.0](docs/releases/v3.0.0.md) | **Watchtower** | Consolidation | Stateful features, persistence, alerts, Isolation Forest, branded UI |
+| [v2.0.0](docs/releases/v2.0.0.md) | **Vanguard** | Baseline | Working dual-model dashboard baseline |
+| [v1.0.0](docs/releases/v1.0.0.md) | **Sentinel** | Foundation | Repository structure, documentation, CI, and feature tests |
 
 ---
 
