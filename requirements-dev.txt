@@ -1,5 +1,5 @@
 -r requirements.txt
-pytest>=8.0
+pytest>=9.1.1
 ruff>=0.5
 yamllint>=1.35
 # Packaging the desktop .exe (see scripts/build_exe.py / docs/deployment/desktop-exe.md)
